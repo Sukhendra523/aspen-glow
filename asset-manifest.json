@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/Sukhendra523/aspen-glow-website.git/static/css/main.92c8d4eb.css",
-    "main.js": "/Sukhendra523/aspen-glow-website.git/static/js/main.61ec0858.js",
-    "static/js/453.7e8c6ee1.chunk.js": "/Sukhendra523/aspen-glow-website.git/static/js/453.7e8c6ee1.chunk.js",
-    "index.html": "/Sukhendra523/aspen-glow-website.git/index.html",
-    "main.92c8d4eb.css.map": "/Sukhendra523/aspen-glow-website.git/static/css/main.92c8d4eb.css.map",
-    "main.61ec0858.js.map": "/Sukhendra523/aspen-glow-website.git/static/js/main.61ec0858.js.map",
-    "453.7e8c6ee1.chunk.js.map": "/Sukhendra523/aspen-glow-website.git/static/js/453.7e8c6ee1.chunk.js.map"
+    "main.css": "/aspen-glow-website/static/css/main.92c8d4eb.css",
+    "main.js": "/aspen-glow-website/static/js/main.2a202b22.js",
+    "static/js/453.7e8c6ee1.chunk.js": "/aspen-glow-website/static/js/453.7e8c6ee1.chunk.js",
+    "index.html": "/aspen-glow-website/index.html",
+    "main.92c8d4eb.css.map": "/aspen-glow-website/static/css/main.92c8d4eb.css.map",
+    "main.2a202b22.js.map": "/aspen-glow-website/static/js/main.2a202b22.js.map",
+    "453.7e8c6ee1.chunk.js.map": "/aspen-glow-website/static/js/453.7e8c6ee1.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.92c8d4eb.css",
-    "static/js/main.61ec0858.js"
+    "static/js/main.2a202b22.js"
   ]
 }
