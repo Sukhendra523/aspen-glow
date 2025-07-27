@@ -155,7 +155,7 @@ const hairServices = [
   { name: "Layer Cut", price: "₹250" },
   { name: "V-Shape Cut", price: "₹200" },
   { name: "U-Shape Cut", price: "₹150" },
-  { name: "Baby Step Cut", price: "₹100" },
+  { name: "Baby Cut", price: "₹100" },
 ];
 
 // --- Components ---
