@@ -30,7 +30,7 @@ import {
   Menu as MenuIcon,
   WhatsApp,
 } from "@mui/icons-material";
-import logo from "./assets/logo.png";
+const logo = process.env.PUBLIC_URL + "/logo.png";
 
 // --- MUI Theme Configuration ---
 // Creates a custom theme to match the brand's aesthetic.
