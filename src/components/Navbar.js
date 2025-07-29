@@ -28,7 +28,19 @@ const Navbar = () => {
     <Box onClick={handleDrawerToggle} sx={{ textAlign: "center", width: 250 }}>
       <List>
         {navLinks.map((item) => (
-          <ListItem key={item} component="a" href={`#${item.toLowerCase()}`}> 
+          <ListItem
+            key={item}
+            component="a"
+            href={`#${item.toLowerCase()}`}
+            sx={{
+              color: "text.primary",
+              ":hover": {
+                backgroundColor: "primary.light",
+                boxShadow: 2,
+                color: "primary.contrastText",
+              },
+            }}
+          >
             <ListItemText primary={item} />
           </ListItem>
         ))}
@@ -48,19 +60,34 @@ const Navbar = () => {
     >
       <Container maxWidth="lg">
         <Toolbar disableGutters>
-          <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center", gap: 2 }}>
-            <img src={logo} alt="Aspen Glow Logo" style={{ height: "45px", width: "auto" }} />
+          <Box
+            sx={{ flexGrow: 1, display: "flex", alignItems: "center", gap: 2 }}
+          >
+            <img
+              src={logo}
+              alt="Aspen Glow Logo"
+              style={{ height: "45px", width: "auto" }}
+            />
             <Typography
               variant="h6"
               component="div"
-              sx={{ flexGrow: 1, color: "text.primary", fontFamily: "'Playfair Display', serif" }}
+              sx={{
+                flexGrow: 1,
+                color: "text.primary",
+                fontFamily: "'Playfair Display', serif",
+              }}
             >
               Aspen Glow
             </Typography>
           </Box>
           <Box sx={{ display: { xs: "none", md: "block" } }}>
             {navLinks.map((item) => (
-              <Button key={item} component="a" href={`#${item.toLowerCase()}`} sx={{ color: "text.primary" }}>
+              <Button
+                key={item}
+                component="a"
+                href={`#${item.toLowerCase()}`}
+                sx={{ color: "text.primary" }}
+              >
                 {item}
               </Button>
             ))}
