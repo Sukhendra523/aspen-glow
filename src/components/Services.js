@@ -93,7 +93,7 @@ const Services = () => (
         </Grid>
         <Grid item xs={12} md={6}>
           <Typography variant="h3" textAlign="center" mb={4}>
-            Mehndi Artistry
+            ꧁🪷🌷🌸🌺🦩 Mehndi Artistry 🪷🌷🌸🌺🦩꧂
           </Typography>
           <Card
             sx={{
@@ -113,6 +113,9 @@ const Services = () => (
                 Intricate and beautiful Mehndi designs for all occasions.
                 Bookings now open! Please contact for custom designs and
                 pricing.
+              </Typography>
+              <Typography variant="h5" sx={{ mt: 2, fontWeight: "bold" }}>
+                𓍯𓂃𓏧♡ Starting from just ₹99. 𓍯𓂃𓏧♡
               </Typography>
             </Box>
           </Card>

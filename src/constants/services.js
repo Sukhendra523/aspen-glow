@@ -25,7 +25,7 @@ export const bridalServices = [
   {
     icon: <Cake sx={{ color: "primary.main" }} />,
     title: "Haldi / Mehndi Makeup",
-    price: "₹1,499",
+    price: "₹2,499",
     items: [
       "A radiant look for your pre-wedding ceremonies.",
       "Includes: Makeup, Hairstyling & Lehnga/Saree Draping.",
@@ -56,11 +56,7 @@ export const packages = [
     icon: <AutoAwesome sx={{ color: "primary.main" }} />,
     title: "Basic Glow",
     price: "₹799",
-    items: [
-      "Facial Cleanup",
-      "Full Hand Waxing",
-      "Threading (Eyebrows & Upper Lip)",
-    ],
+    items: ["Facial Cleanup", "Full Hand Waxing", "Threading 🎉 Free"],
   },
   {
     icon: <Star sx={{ color: "primary.main" }} />,
@@ -69,7 +65,7 @@ export const packages = [
     items: [
       "D-Tan Treatment Facial",
       "Half Leg & Full Hand Waxing",
-      "Threading",
+      "Threading 🎉 Free",
     ],
   },
   {
@@ -77,10 +73,10 @@ export const packages = [
     title: "Diamond Glow",
     price: "₹1499",
     items: [
-      "Facial",
+      "Lotus Facial",
       "Skin Brightening Bleach",
       "Full Hand & Full Leg Waxing",
-      "Threading",
+      "Threading 🎉 Free",
     ],
   },
   {
@@ -88,10 +84,10 @@ export const packages = [
     title: "Royal Treatment",
     price: "₹1999",
     items: [
-      "Facial & Bleach",
+      "O3 Facial",
+      "Skin Brightening Bleach",
       "Full Hand & Full Leg Premium Rica Wax",
-      "Threading",
-      "Haircut",
+      "Threading 🎉 Free",
     ],
   },
 ];
