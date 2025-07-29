@@ -1,16 +1,16 @@
 {
   "files": {
     "main.css": "/aspen-glow/static/css/main.92c8d4eb.css",
-    "main.js": "/aspen-glow/static/js/main.d37a5b82.js",
+    "main.js": "/aspen-glow/static/js/main.e180ec4e.js",
     "static/js/453.7e8c6ee1.chunk.js": "/aspen-glow/static/js/453.7e8c6ee1.chunk.js",
     "static/media/logo.png": "/aspen-glow/static/media/logo.3b179255fe43552bc089.png",
     "index.html": "/aspen-glow/index.html",
     "main.92c8d4eb.css.map": "/aspen-glow/static/css/main.92c8d4eb.css.map",
-    "main.d37a5b82.js.map": "/aspen-glow/static/js/main.d37a5b82.js.map",
+    "main.e180ec4e.js.map": "/aspen-glow/static/js/main.e180ec4e.js.map",
     "453.7e8c6ee1.chunk.js.map": "/aspen-glow/static/js/453.7e8c6ee1.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.92c8d4eb.css",
-    "static/js/main.d37a5b82.js"
+    "static/js/main.e180ec4e.js"
   ]
 }
