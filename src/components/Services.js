@@ -12,33 +12,28 @@ import {
 } from "@mui/material";
 import { ContentCut, ColorLens } from "@mui/icons-material";
 import ServiceCard from "./ServiceCard";
-import { packages, makeupServices, hairServices } from "../constants/services";
+import {
+  packages,
+  makeupServices,
+  hairServices,
+  bridalServices,
+} from "../constants/services";
 
 const Services = () => (
   <Box id="services" component="section" sx={{ py: 8, bgcolor: "#f9f9f9" }}>
     <Container maxWidth="lg">
       <Box textAlign="center" mb={8}>
         <Typography variant="h2" component="h2">
-          Our Exclusive Services
+          ✨ Our Exclusive Services ✨
         </Typography>
         <Typography variant="h6" color="text.secondary" fontWeight="light">
           Tailored packages to make you shine.
         </Typography>
       </Box>
 
+      {/* Makeup & Styling */}
       <Typography variant="h3" textAlign="center" mb={4}>
-        Beauty Packages
-      </Typography>
-      <Grid container spacing={4} mb={8} justifyContent="center">
-        {packages.map((pkg, index) => (
-          <Grid item key={index} xs={12} sm={6} md={4}>
-            <ServiceCard {...pkg} />
-          </Grid>
-        ))}
-      </Grid>
-
-      <Typography variant="h3" textAlign="center" mb={4}>
-        Makeup & Styling
+        💄 Makeup & Styling for Every Occasion 💄
       </Typography>
       <Grid container spacing={4} justifyContent="center" mb={8}>
         {makeupServices.map((service, index) => (
@@ -48,10 +43,33 @@ const Services = () => (
         ))}
       </Grid>
 
+      {/* Bridal & Pre-Bridal */}
+      <Typography variant="h3" textAlign="center" mb={4}>
+        👰 Bridal & Pre-Bridal Services 👰
+      </Typography>
+      <Grid container spacing={4} justifyContent="center" mb={8}>
+        {bridalServices.map((service, index) => (
+          <Grid item key={index} xs={12} sm={6} md={4}>
+            <ServiceCard {...service} />
+          </Grid>
+        ))}
+      </Grid>
+
+      <Typography variant="h3" textAlign="center" mb={4}>
+        👑 Exclusive Beauty Packages 👑
+      </Typography>
+      <Grid container spacing={4} mb={8} justifyContent="center">
+        {packages.map((pkg, index) => (
+          <Grid item key={index} xs={12} sm={6} md={4}>
+            <ServiceCard {...pkg} />
+          </Grid>
+        ))}
+      </Grid>
+
       <Grid container spacing={4} justifyContent="center">
         <Grid item xs={12} md={6}>
           <Typography variant="h3" textAlign="center" mb={4}>
-            À La Carte Hair Services
+            ✂️ À La Carte Hair Services ✂️
           </Typography>
           <Card
             sx={{ p: 2, borderTop: "4px solid", borderColor: "primary.light" }}
