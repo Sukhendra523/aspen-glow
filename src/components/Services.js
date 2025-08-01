@@ -50,7 +50,7 @@ const Services = () => (
         textAlign="center"
         mb={4}
         sx={{
-          fontSize: { xs: "1.2rem", sm: "1.7rem", md: "2.125rem" },
+          fontSize: { xs: "1rem", sm: "1.7rem", md: "2.125rem" },
           fontWeight: 600,
         }}
       >

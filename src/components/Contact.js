@@ -19,7 +19,7 @@ const Contact = () => (
         }}
       >
         <Box display="flex" flexDirection="column" alignItems="center" gap={3}>
-          <Typography variant="h6">Contact: Shilpi Chuhan</Typography>
+          <Typography variant="h6">Contact: Shilpi Chauhan</Typography>
           <Box display="flex" alignItems="center" gap={1.5}>
             <Phone sx={{ color: "primary.main" }} />
             <Link
