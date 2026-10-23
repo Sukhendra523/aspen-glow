@@ -29,8 +29,10 @@ const CMS_MODULES = [
     title: "Service Catalogue",
     description:
       "Manage salon services, categories, inclusions, and INR prices.",
-    status: "Ticket 3",
-    active: false,
+    status: "Active",
+    active: true,
+    path: "/admin/services",
+    actionLabel: "Manage Services",
   },
   {
     title: "Packages",

@@ -9,6 +9,7 @@ import AdminLoginPage from "./pages/admin/AdminLoginPage";
 import AdminResetPasswordPage from "./pages/admin/AdminResetPasswordPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
+import AdminServicesPage from "./pages/admin/AdminServicesPage";
 
 export function AppRoutes() {
   return (
@@ -29,6 +30,14 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <AdminSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/services"
+        element={
+          <ProtectedRoute>
+            <AdminServicesPage />
           </ProtectedRoute>
         }
       />
