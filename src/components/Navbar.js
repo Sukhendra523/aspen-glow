@@ -13,12 +13,18 @@ import {
   Drawer,
 } from "@mui/material";
 import { Menu as MenuIcon } from "@mui/icons-material";
-import logo from "../assets/logo.png";
+import defaultLogo from "../assets/logo.png";
+import {
+  DEFAULT_BRAND_SETTINGS,
+  getSafeExternalUrl,
+} from "../constants/defaultSettings";
 
 const navLinks = ["Home", "Services", "Contact"];
 
-const Navbar = () => {
+const Navbar = ({ brand = DEFAULT_BRAND_SETTINGS }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const safeBrand = { ...DEFAULT_BRAND_SETTINGS, ...(brand || {}) };
+  const logoSrc = getSafeExternalUrl(safeBrand.logo_url) || defaultLogo;
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
@@ -64,8 +70,8 @@ const Navbar = () => {
             sx={{ flexGrow: 1, display: "flex", alignItems: "center", gap: 2 }}
           >
             <img
-              src={logo}
-              alt="Aspen Glow Logo"
+              src={logoSrc}
+              alt={`${safeBrand.brand_name} Logo`}
               style={{ height: "45px", width: "auto" }}
             />
             <Typography
@@ -74,10 +80,10 @@ const Navbar = () => {
               sx={{
                 flexGrow: 1,
                 color: "text.primary",
-                fontFamily: "'Playfair Display', serif",
+                fontFamily: `'${safeBrand.heading_font}', serif`,
               }}
             >
-              Aspen Glow
+              {safeBrand.short_name}
             </Typography>
           </Box>
           <Box sx={{ display: { xs: "none", md: "block" } }}>
