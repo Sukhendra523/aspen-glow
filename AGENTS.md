@@ -30,13 +30,14 @@ Build and maintain the Aspen Glow by Shilpi salon website and its owner-operated
 13. **Accessibility matters.** Use labels, keyboard access, visible focus, readable errors, and non-hover-only actions.
 14. **Do not add dependencies without justification.** Prefer existing packages. If adding one, explain why, check maintenance/licensing/size, and update lockfile.
 15. **Keep docs aligned.** Update relevant docs for changes to architecture, data models, security, environment variables, or developer workflow.
+16. **Do not execute heavy npm commands (`npm test`, `npm run build`, `npm install`).** To save tokens and avoid long command waits, do not run `npm test`, `npm.cmd test`, `npm run build`, or `npm install` directly from the agent terminal. Instead, write the tests/code and ask the user to run the command and share the output when verification is needed.
 
 ## Required workflow
 1. Restate the ticket goal and acceptance criteria in 2–5 bullets.
 2. Inspect relevant files and report any uncertainty.
 3. Identify the smallest implementation plan and tests.
 4. Make the change in focused steps.
-5. Run targeted tests, lint/type checks if configured, and production build when feasible.
+5. Provide the exact test/build command for the user to run and wait for the user's result rather than running `npm test` or `npm run build` in the agent terminal.
 6. Inspect the final diff for unrelated edits, secrets, generated files, and accidental data changes.
 7. Report: summary, files changed, commands run/results, security/data considerations, and remaining gaps.
 
