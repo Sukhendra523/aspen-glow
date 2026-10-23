@@ -202,6 +202,11 @@ function createPosterPersistenceClient({
           update: posterUpdateMock,
         };
       }
+      if (table === "services") {
+        return {
+          select: jest.fn(() => buildListChain(() => [])),
+        };
+      }
       return {};
     }),
   };

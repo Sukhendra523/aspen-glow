@@ -11,7 +11,13 @@ const SAFE_ARCHIVE_ERROR =
   "Unable to archive the package right now. Please try again.";
 
 const PACKAGE_SELECT_QUERY =
-  "id, name, description, price_inr, icon_name, display_order, status, created_at, updated_at, package_services(id, service_id, display_order, inclusion_note, service:services(id, name, category, price_inr, status))";
+  "id, name, description, price_inr, icon_name, display_order, status, package_group, tagline, badge_text, card_color, created_at, updated_at, package_services(id, service_id, display_order, inclusion_note, service:services(id, name, category, price_inr, status))";
+
+export const PACKAGE_GROUPS = [
+  "Multi-Service Packages",
+  "Cleanup Packages",
+  "Festive Luxe Packages",
+];
 
 export const EMPTY_PACKAGE_FORM = {
   name: "",
@@ -20,6 +26,10 @@ export const EMPTY_PACKAGE_FORM = {
   icon_name: "AutoAwesome",
   display_order: 1,
   status: "draft",
+  package_group: "Multi-Service Packages",
+  tagline: "",
+  badge_text: "",
+  card_color: "",
   service_items: [],
 };
 
@@ -148,6 +158,18 @@ export function validatePackageInput(input = {}) {
         icon_name: iconName,
         display_order: Number.isNaN(displayOrder) ? 0 : displayOrder,
         status,
+        ...(input.package_group !== undefined
+          ? { package_group: String(input.package_group || "Multi-Service Packages").trim() }
+          : {}),
+        ...(input.tagline !== undefined
+          ? { tagline: String(input.tagline || "").trim() }
+          : {}),
+        ...(input.badge_text !== undefined
+          ? { badge_text: String(input.badge_text || "").trim() }
+          : {}),
+        ...(input.card_color !== undefined
+          ? { card_color: String(input.card_color || "").trim() }
+          : {}),
       },
       serviceItems: cleanedServiceItems,
     },

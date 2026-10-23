@@ -22,8 +22,8 @@ export const DEFAULT_CONTACT_SETTINGS = {
   contact_name: "Shilpi Chauhan",
   phone: "7011413546",
   whatsapp: "917011413546",
-  address: "703 Aspen Tower, Dev Sai Sports Home, Greater Noida",
-  booking_url: "",
+  address: "703 Aspen Tower, DevSai Sports Home, Sector 1, Bisrakh, Greater Noida",
+  booking_url: "https://aspen-glow.netlify.app",
   appointment_note:
     "Appointments are highly recommended. Looking forward to pampering you!",
   status: "published",

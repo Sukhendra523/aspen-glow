@@ -31,6 +31,7 @@ import {
 import { fetchAdminServices } from "../../services/serviceCatalogueService";
 import {
   EMPTY_PACKAGE_FORM,
+  PACKAGE_GROUPS,
   archivePackageRecord,
   createPackageRecord,
   fetchAdminPackages,
@@ -64,6 +65,10 @@ function mapPackageToForm(pkg) {
         ? String(pkg.display_order)
         : "1",
     status: pkg.status || "draft",
+    package_group: pkg.package_group || "Multi-Service Packages",
+    tagline: pkg.tagline || "",
+    badge_text: pkg.badge_text || "",
+    card_color: pkg.card_color || "",
     service_items: items,
   };
 }
@@ -76,6 +81,10 @@ function serializePackageForm(form) {
     icon_name: form.icon_name || "AutoAwesome",
     display_order: String(form.display_order ?? "1"),
     status: form.status || "draft",
+    package_group: form.package_group || "Multi-Service Packages",
+    tagline: form.tagline || "",
+    badge_text: form.badge_text || "",
+    card_color: form.card_color || "",
     service_items: (form.service_items || []).map((item) => ({
       service_id: item.service_id || "",
       inclusion_note: item.inclusion_note || "",
@@ -568,6 +577,61 @@ export default function AdminPackagesPage() {
                     helperText={fieldErrors.description}
                     disabled={saving}
                   />
+
+                  <Grid container spacing={2} sx={{ mt: 0.5 }}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        id="package-group"
+                        select
+                        label="Package Group (Poster Category)"
+                        fullWidth
+                        size="small"
+                        value={form.package_group || "Multi-Service Packages"}
+                        onChange={handleFieldChange("package_group")}
+                        disabled={saving}
+                      >
+                        {PACKAGE_GROUPS.map((grp) => (
+                          <MenuItem key={grp} value={grp}>
+                            {grp}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        id="package-badge-text"
+                        label="Poster Badge (e.g. MOST POPULAR)"
+                        fullWidth
+                        size="small"
+                        value={form.badge_text || ""}
+                        onChange={handleFieldChange("badge_text")}
+                        disabled={saving}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 8 }}>
+                      <TextField
+                        id="package-tagline"
+                        label="Poster Card Tagline (e.g. SAVE MORE | LOOK BEAUTIFUL)"
+                        fullWidth
+                        size="small"
+                        value={form.tagline || ""}
+                        onChange={handleFieldChange("tagline")}
+                        disabled={saving}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                      <TextField
+                        id="package-card-color"
+                        label="Poster Card Color Hex"
+                        fullWidth
+                        size="small"
+                        placeholder="#4e1014"
+                        value={form.card_color || ""}
+                        onChange={handleFieldChange("card_color")}
+                        disabled={saving}
+                      />
+                    </Grid>
+                  </Grid>
 
                   <Divider sx={{ my: 2.5 }} />
 

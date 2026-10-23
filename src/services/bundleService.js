@@ -11,7 +11,7 @@ const SAFE_ARCHIVE_ERROR =
   "Unable to archive the bundle right now. Please try again.";
 
 const BUNDLE_SELECT_QUERY =
-  "id, name, description, price_inr, icon_name, display_order, status, created_at, updated_at, bundle_packages(id, package_id, display_order, package:packages(id, name, description, price_inr, status))";
+  "id, name, description, price_inr, icon_name, display_order, status, tagline, badge_text, card_color, created_at, updated_at, bundle_packages(id, package_id, display_order, package:packages(id, name, description, price_inr, status))";
 
 export const EMPTY_BUNDLE_FORM = {
   name: "",
@@ -20,6 +20,9 @@ export const EMPTY_BUNDLE_FORM = {
   icon_name: "Star",
   display_order: 1,
   status: "draft",
+  tagline: "",
+  badge_text: "",
+  card_color: "",
   package_items: [],
 };
 
@@ -138,6 +141,15 @@ export function validateBundleInput(input = {}) {
         icon_name: iconName,
         display_order: Number.isNaN(displayOrder) ? 0 : displayOrder,
         status,
+        ...(input.tagline !== undefined
+          ? { tagline: String(input.tagline || "").trim() }
+          : {}),
+        ...(input.badge_text !== undefined
+          ? { badge_text: String(input.badge_text || "").trim() }
+          : {}),
+        ...(input.card_color !== undefined
+          ? { card_color: String(input.card_color || "").trim() }
+          : {}),
       },
       packageItems: cleanedPackageItems,
     },

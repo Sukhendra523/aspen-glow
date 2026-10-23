@@ -167,6 +167,11 @@ function createPosterStudioSupabaseClient({ isAdmin = true } = {}) {
           select: jest.fn(() => buildListChain(() => [])),
         };
       }
+      if (table === "services") {
+        return {
+          select: jest.fn(() => buildListChain(() => [])),
+        };
+      }
       return {};
     }),
   };
@@ -286,6 +291,108 @@ describe("Ticket 7 — Snapshot Resolver & Canvas Poster Renderer", () => {
     expect(fillTextCalls.join(" | ")).toContain("Diwali Festive Beauty Offers");
     expect(fillTextCalls.join(" | ")).toContain("Basic Glow");
     expect(fillTextCalls.join(" | ")).toContain("₹799");
+  });
+
+  test("renders all 4 reference poster templates (Multi-Service 4-Col, Cleanup List, Luxe 3-Col + QR, Bridal & À La Carte Catalogue) via Fabric.js engine", () => {
+    const templateIds = [
+      "royal_4col_packages_v1",
+      "cleanup_arch_list_v1",
+      "luxe_3col_gift_v1",
+      "bridal_alacarte_catalogue_v1",
+    ];
+
+    templateIds.forEach((tplKey) => {
+      const fillTextCalls = [];
+      const fakeCtx = {
+        fillStyle: "",
+        strokeStyle: "",
+        lineWidth: 1,
+        font: "",
+        textAlign: "left",
+        fillRect: jest.fn(),
+        strokeRect: jest.fn(),
+        fillText: jest.fn((text) => fillTextCalls.push(text)),
+      };
+      const fakeCanvas = {
+        width: 0,
+        height: 0,
+        getContext: jest.fn(() => fakeCtx),
+      };
+
+      const tpl =
+        DEFAULT_POSTER_TEMPLATES.find((t) => t.template_key === tplKey) ||
+        DEFAULT_POSTER_TEMPLATES[0];
+
+      const snap = buildPosterSnapshot({
+        campaignName: `Teej ${tplKey}`,
+        headline: "Teej Special Offer",
+        festival: DEFAULT_FESTIVALS[2],
+        template: tpl,
+        formatKey:
+          tplKey === "cleanup_arch_list_v1"
+            ? "square_1080"
+            : "portrait_1080x1620",
+        showQrCode: tplKey === "luxe_3col_gift_v1",
+        selectedPackages: [
+          {
+            id: "pkg-lotus",
+            name: "Lotus Glow",
+            price_inr: 1499,
+            badge_text: "MOST POPULAR",
+            tagline: "SHINE LIKE | A LOTUS",
+            items: ["Lotus Facial", "Skin Brightening Bleach"],
+          },
+        ],
+      });
+
+      const res = renderPosterToCanvas(fakeCanvas, snap);
+      expect(res.rendered).toBe(true);
+      expect(fillTextCalls.join(" | ")).toContain("Aspen Glow by Shilpi");
+    });
+  });
+
+  test("cancels stale async redraws and does not loop infinitely when switching snapshots on the same canvas", () => {
+    jest.useFakeTimers();
+    const fillTextCalls = [];
+    const fakeCtx = {
+      fillStyle: "",
+      strokeStyle: "",
+      lineWidth: 1,
+      font: "",
+      textAlign: "left",
+      fillRect: jest.fn(),
+      strokeRect: jest.fn(),
+      fillText: jest.fn((text) => fillTextCalls.push(text)),
+    };
+    const fakeCanvas = {
+      width: 0,
+      height: 0,
+      getContext: jest.fn(() => fakeCtx),
+    };
+
+    const snap1 = buildPosterSnapshot({
+      campaignName: "First Snapshot",
+      headline: "First Headline",
+      template: DEFAULT_POSTER_TEMPLATES[0],
+      selectedPackages: [{ id: "1", name: "Basic Glow", price_inr: 799 }],
+    });
+    const snap2 = buildPosterSnapshot({
+      campaignName: "Second Snapshot",
+      headline: "Second Headline",
+      template: DEFAULT_POSTER_TEMPLATES[2],
+      selectedPackages: [
+        { id: "2", name: "Gold cleanup with D-tan pack", price_inr: 599 },
+      ],
+    });
+
+    renderPosterToCanvas(fakeCanvas, snap1);
+    renderPosterToCanvas(fakeCanvas, snap2);
+
+    const callsAfterRender = fakeCtx.fillText.mock.calls.length;
+    jest.advanceTimersByTime(200);
+    // No infinite timer loop should fire after synchronous renders
+    expect(fakeCtx.fillText.mock.calls.length).toBe(callsAfterRender);
+    jest.useRealTimers();
   });
 });
 

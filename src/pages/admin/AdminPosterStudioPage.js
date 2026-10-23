@@ -36,6 +36,7 @@ import {
   DEFAULT_POSTER_TEMPLATES,
   POSTER_FORMATS,
   POSTER_THEMES,
+  REFERENCE_POSTER_PRESETS,
 } from "../../poster/posterTemplates";
 import {
   exportPosterToPng,
@@ -46,6 +47,7 @@ import {
   validatePosterCampaignInput,
 } from "../../poster/snapshotResolver";
 import { fetchAdminSiteSettings } from "../../services/settingsService";
+import { fetchAdminServices } from "../../services/serviceCatalogueService";
 import { fetchAdminPackages } from "../../services/packageService";
 import { fetchAdminBundles } from "../../services/bundleService";
 import {
@@ -72,12 +74,14 @@ export default function AdminPosterStudioPage() {
   const [contact, setContact] = useState(DEFAULT_CONTACT_SETTINGS);
   const [festivals, setFestivals] = useState(DEFAULT_FESTIVALS);
   const [templates, setTemplates] = useState(DEFAULT_POSTER_TEMPLATES);
+  const [services, setServices] = useState([]);
   const [packages, setPackages] = useState([]);
   const [bundles, setBundles] = useState([]);
   const [savedPosters, setSavedPosters] = useState([]);
 
   const [editingPosterId, setEditingPosterId] = useState(null);
   const [lockedSnapshot, setLockedSnapshot] = useState(null);
+  const [selectedPresetKey, setSelectedPresetKey] = useState("");
 
   const [campaignName, setCampaignName] = useState(
     "Karwa Chauth Festive Campaign"
@@ -89,13 +93,29 @@ export default function AdminPosterStudioPage() {
     DEFAULT_POSTER_TEMPLATES[0].template_key
   );
   const [formatKey, setFormatKey] = useState("square_1080");
-  const [themeKey, setThemeKey] = useState("royal_rose");
+  const [themeKey, setThemeKey] = useState("royal_dark_gold");
   const [headline, setHeadline] = useState(
     DEFAULT_FESTIVALS[0].default_headline
   );
   const [subheadline, setSubheadline] = useState(
     DEFAULT_FESTIVALS[0].default_subheadline
   );
+  const [secondarySubheadline, setSecondarySubheadline] = useState(
+    "Celebrate the bond of love with Self-Care & Confidence"
+  );
+  const [sectionTitle, setSectionTitle] = useState("MULTI SERVICE PACKAGES");
+  const [sectionSubtitle, setSectionSubtitle] = useState(
+    "Pamper Yourself This Festive Season"
+  );
+  const [badgeText, setBadgeText] = useState(
+    "GLOW\nINSIDE & OUT\nBECAUSE\nYOU DESERVE IT!"
+  );
+  const [ctaText, setCtaText] = useState("BOOK YOUR APPOINTMENT NOW!");
+  const [footerTagline, setFooterTagline] = useState(
+    "THIS TEEJ, GIFT YOUR SISTER THE GLOW SHE DESERVES."
+  );
+  const [portraitUrl, setPortraitUrl] = useState("");
+  const [showQrCode, setShowQrCode] = useState(false);
   const [validityNote, setValidityNote] = useState("");
 
   const [selectedPackageIds, setSelectedPackageIds] = useState([]);
@@ -133,44 +153,59 @@ export default function AdminPosterStudioPage() {
       fetchAdminPackages(client),
       fetchAdminBundles(client),
       fetchAdminPosters(client),
-    ]).then(([settingsRes, festRes, tplRes, pkgRes, bndRes, postersRes]) => {
-      if (!isMounted) return;
-      setBrand(settingsRes.brand);
-      setContact(settingsRes.contact);
+      fetchAdminServices(client),
+    ]).then(
+      ([
+        settingsRes,
+        festRes,
+        tplRes,
+        pkgRes,
+        bndRes,
+        postersRes,
+        svcRes,
+      ]) => {
+        if (!isMounted) return;
+        setBrand(settingsRes.brand);
+        setContact(settingsRes.contact);
 
-      const loadedFestivals =
-        festRes.data && festRes.data.length > 0
-          ? festRes.data
-          : DEFAULT_FESTIVALS;
-      setFestivals(loadedFestivals);
-      setSelectedFestivalId(loadedFestivals[0].id);
-      setHeadline(loadedFestivals[0].default_headline || "");
-      setSubheadline(loadedFestivals[0].default_subheadline || "");
+        const loadedFestivals =
+          festRes.data && festRes.data.length > 0
+            ? festRes.data
+            : DEFAULT_FESTIVALS;
+        setFestivals(loadedFestivals);
+        setSelectedFestivalId(loadedFestivals[0].id);
+        setHeadline(loadedFestivals[0].default_headline || "");
+        setSubheadline(loadedFestivals[0].default_subheadline || "");
 
-      const loadedTemplates =
-        tplRes.data && tplRes.data.length > 0
-          ? tplRes.data
-          : DEFAULT_POSTER_TEMPLATES;
-      setTemplates(loadedTemplates);
-      setSelectedTemplateKey(loadedTemplates[0].template_key);
+        const loadedTemplates =
+          tplRes.data && tplRes.data.length > 0
+            ? tplRes.data
+            : DEFAULT_POSTER_TEMPLATES;
+        setTemplates(loadedTemplates);
+        setSelectedTemplateKey(loadedTemplates[0].template_key);
 
-      const activePkgs = (pkgRes.data || []).filter(
-        (p) => p.status !== "archived"
-      );
-      const activeBnds = (bndRes.data || []).filter(
-        (b) => b.status !== "archived"
-      );
-      setPackages(activePkgs);
-      setBundles(activeBnds);
-      setSavedPosters(postersRes.data || []);
+        const activeSvcs = (svcRes?.data || []).filter(
+          (s) => s.status !== "archived"
+        );
+        const activePkgs = (pkgRes.data || []).filter(
+          (p) => p.status !== "archived"
+        );
+        const activeBnds = (bndRes.data || []).filter(
+          (b) => b.status !== "archived"
+        );
+        setServices(activeSvcs);
+        setPackages(activePkgs);
+        setBundles(activeBnds);
+        setSavedPosters(postersRes.data || []);
 
-      if (activePkgs.length > 0) {
-        setSelectedPackageIds(activePkgs.slice(0, 2).map((p) => p.id));
+        if (activePkgs.length > 0) {
+          setSelectedPackageIds(activePkgs.slice(0, 4).map((p) => p.id));
+        }
+
+        setLoadError(pkgRes.error || bndRes.error || "");
+        setLoading(false);
       }
-
-      setLoadError(pkgRes.error || bndRes.error || "");
-      setLoading(false);
-    });
+    );
     return () => {
       isMounted = false;
     };
@@ -187,6 +222,9 @@ export default function AdminPosterStudioPage() {
   const activeTemplate = useMemo(
     () =>
       templates.find((t) => t.template_key === selectedTemplateKey) ||
+      DEFAULT_POSTER_TEMPLATES.find(
+        (t) => t.template_key === selectedTemplateKey
+      ) ||
       templates[0] ||
       DEFAULT_POSTER_TEMPLATES[0],
     [templates, selectedTemplateKey]
@@ -234,7 +272,15 @@ export default function AdminPosterStudioPage() {
         campaignName,
         headline,
         subheadline,
+        secondarySubheadline,
+        sectionTitle,
+        sectionSubtitle,
+        badgeText,
+        ctaText,
+        footerTagline,
         validityNote,
+        portraitUrl,
+        showQrCode,
         festival: activeFestival,
         template: activeTemplate,
         formatKey,
@@ -243,12 +289,21 @@ export default function AdminPosterStudioPage() {
         contact,
         selectedPackages,
         selectedBundles,
+        catalogueServices: services,
       }),
     [
       campaignName,
       headline,
       subheadline,
+      secondarySubheadline,
+      sectionTitle,
+      sectionSubtitle,
+      badgeText,
+      ctaText,
+      footerTagline,
       validityNote,
+      portraitUrl,
+      showQrCode,
       activeFestival,
       activeTemplate,
       formatKey,
@@ -257,11 +312,10 @@ export default function AdminPosterStudioPage() {
       contact,
       selectedPackages,
       selectedBundles,
+      services,
     ]
   );
 
-  // When a saved poster is reopened, displayedSnapshot uses its immutable content_snapshot
-  // unless the owner edits campaign fields or explicitly clicks "Refresh Snapshot with Current Catalogue Data".
   const displayedSnapshot = lockedSnapshot || liveSnapshot;
 
   useEffect(() => {
@@ -269,6 +323,103 @@ export default function AdminPosterStudioPage() {
       renderPosterToCanvas(canvasRef.current, displayedSnapshot);
     }
   }, [displayedSnapshot]);
+
+  const handleApplyPreset = (presetKey) => {
+    setSelectedPresetKey(presetKey);
+    const preset = REFERENCE_POSTER_PRESETS.find((p) => p.key === presetKey);
+    if (!preset) return;
+
+    setLockedSnapshot(null);
+    setSelectedTemplateKey(preset.templateKey);
+    setFormatKey(preset.formatKey);
+    setThemeKey(preset.themeKey);
+    setCampaignName(preset.campaignName);
+    setHeadline(preset.headline);
+    setSubheadline(preset.subheadline);
+    if (preset.secondarySubheadline !== undefined) {
+      setSecondarySubheadline(preset.secondarySubheadline);
+    }
+    if (preset.sectionTitle !== undefined) {
+      setSectionTitle(preset.sectionTitle);
+    }
+    if (preset.sectionSubtitle !== undefined) {
+      setSectionSubtitle(preset.sectionSubtitle);
+    }
+    if (preset.badgeText !== undefined) {
+      setBadgeText(preset.badgeText);
+    }
+    if (preset.ctaText !== undefined) {
+      setCtaText(preset.ctaText);
+    }
+    if (preset.footerTagline !== undefined) {
+      setFooterTagline(preset.footerTagline);
+    }
+    setShowQrCode(Boolean(preset.showQrCode));
+
+    const matchFest = festivals.find(
+      (f) => f.name.toLowerCase() === (preset.festivalName || "").toLowerCase()
+    );
+    if (matchFest) {
+      setSelectedFestivalId(matchFest.id);
+    }
+
+    if (Array.isArray(preset.packageNames) && packages.length > 0) {
+      const matchedIds = packages
+        .filter((pkg) =>
+          preset.packageNames.some(
+            (pName) => pName.toLowerCase() === (pkg.name || "").toLowerCase()
+          )
+        )
+        .map((pkg) => pkg.id);
+      if (matchedIds.length > 0) {
+        setSelectedPackageIds(matchedIds);
+        setSelectedBundleIds([]);
+      }
+    }
+  };
+
+  const handleTemplateSelect = (nextTemplateKey) => {
+    setLockedSnapshot(null);
+    setSelectedTemplateKey(nextTemplateKey);
+
+    const matchingPreset = REFERENCE_POSTER_PRESETS.find(
+      (p) => p.templateKey === nextTemplateKey
+    );
+    if (!matchingPreset) return;
+
+    setFormatKey(matchingPreset.formatKey);
+    setThemeKey(matchingPreset.themeKey);
+    if (matchingPreset.sectionTitle !== undefined) {
+      setSectionTitle(matchingPreset.sectionTitle);
+    }
+    if (matchingPreset.sectionSubtitle !== undefined) {
+      setSectionSubtitle(matchingPreset.sectionSubtitle);
+    }
+    if (matchingPreset.badgeText !== undefined) {
+      setBadgeText(matchingPreset.badgeText);
+    }
+    if (matchingPreset.ctaText !== undefined) {
+      setCtaText(matchingPreset.ctaText);
+    }
+    if (matchingPreset.footerTagline !== undefined) {
+      setFooterTagline(matchingPreset.footerTagline);
+    }
+    setShowQrCode(Boolean(matchingPreset.showQrCode));
+
+    if (Array.isArray(matchingPreset.packageNames) && packages.length > 0) {
+      const matchedIds = packages
+        .filter((pkg) =>
+          matchingPreset.packageNames.some(
+            (pName) => pName.toLowerCase() === (pkg.name || "").toLowerCase()
+          )
+        )
+        .map((pkg) => pkg.id);
+      if (matchedIds.length > 0) {
+        setSelectedPackageIds(matchedIds);
+        setSelectedBundleIds([]);
+      }
+    }
+  };
 
   const handleFestivalSelect = (event) => {
     const nextId = event.target.value;
@@ -279,6 +430,10 @@ export default function AdminPosterStudioPage() {
       setHeadline(fest.default_headline || "");
       setSubheadline(fest.default_subheadline || "");
       setCampaignName(`${fest.name} Festive Campaign`);
+      setSectionSubtitle(`Pamper Yourself This ${fest.name}`);
+      setFooterTagline(
+        `THIS ${fest.name.toUpperCase()}, GIFT YOUR SISTER THE GLOW SHE DESERVES.`
+      );
     }
   };
 
@@ -331,6 +486,8 @@ export default function AdminPosterStudioPage() {
           themeKey: snapshotToSave.template?.theme_key || themeKey,
           selectedPackageIds,
           selectedBundleIds,
+          showQrCode,
+          portraitUrl,
         },
         snapshot: snapshotToSave,
       },
@@ -398,6 +555,12 @@ export default function AdminPosterStudioPage() {
     setHeadline(snap?.campaign?.headline || "");
     setSubheadline(snap?.campaign?.subheadline || "");
     setValidityNote(snap?.campaign?.validity_note || "");
+    if (snap?.campaign?.section_title) {
+      setSectionTitle(snap.campaign.section_title);
+    }
+    if (snap?.campaign?.footer_tagline) {
+      setFooterTagline(snap.campaign.footer_tagline);
+    }
     if (snap?.template?.template_key) {
       setSelectedTemplateKey(snap.template.template_key);
     }
@@ -512,6 +675,15 @@ export default function AdminPosterStudioPage() {
 
   const maxOfferings =
     Number(activeTemplate?.layout_config?.max_offerings) || 4;
+  const allTemplateOptions =
+    templates.length >= DEFAULT_POSTER_TEMPLATES.length
+      ? templates
+      : [
+          ...templates,
+          ...DEFAULT_POSTER_TEMPLATES.filter(
+            (dt) => !templates.some((t) => t.template_key === dt.template_key)
+          ),
+        ];
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
@@ -660,6 +832,26 @@ export default function AdminPosterStudioPage() {
                 </Box>
 
                 <TextField
+                  id="poster-preset-select"
+                  select
+                  label="Quick-Load Reference Poster Preset"
+                  fullWidth
+                  size="small"
+                  margin="dense"
+                  value={selectedPresetKey}
+                  onChange={(e) => handleApplyPreset(e.target.value)}
+                >
+                  <MenuItem value="">
+                    <em>Custom Configuration</em>
+                  </MenuItem>
+                  {REFERENCE_POSTER_PRESETS.map((preset) => (
+                    <MenuItem key={preset.key} value={preset.key}>
+                      {preset.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                <TextField
                   id="poster-festival-select"
                   select
                   label="Select Festival / Occasion"
@@ -682,12 +874,9 @@ export default function AdminPosterStudioPage() {
                   fullWidth
                   margin="normal"
                   value={selectedTemplateKey}
-                  onChange={(e) => {
-                    setLockedSnapshot(null);
-                    setSelectedTemplateKey(e.target.value);
-                  }}
+                  onChange={(e) => handleTemplateSelect(e.target.value)}
                 >
-                  {templates.map((tpl) => (
+                  {allTemplateOptions.map((tpl) => (
                     <MenuItem key={tpl.template_key} value={tpl.template_key}>
                       {tpl.name} (up to{" "}
                       {tpl.layout_config?.max_offerings || 4} items)
@@ -739,7 +928,7 @@ export default function AdminPosterStudioPage() {
                 <Divider sx={{ my: 2.5 }} />
 
                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  Campaign Copy
+                  Campaign Copy &amp; Layout Labels
                 </Typography>
 
                 <TextField
@@ -774,7 +963,7 @@ export default function AdminPosterStudioPage() {
 
                 <TextField
                   id="poster-subheadline"
-                  label="Poster Subheadline"
+                  label="Poster Subheadline (Ribbon Banner)"
                   fullWidth
                   margin="dense"
                   value={subheadline}
@@ -784,6 +973,62 @@ export default function AdminPosterStudioPage() {
                   }}
                   error={Boolean(validation.errors.subheadline)}
                   helperText={validation.errors.subheadline}
+                />
+
+                <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TextField
+                      id="poster-section-title"
+                      label="Section Banner Title"
+                      fullWidth
+                      size="small"
+                      value={sectionTitle}
+                      onChange={(e) => {
+                        setLockedSnapshot(null);
+                        setSectionTitle(e.target.value);
+                      }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TextField
+                      id="poster-cta-text"
+                      label="CTA Ribbon Text"
+                      fullWidth
+                      size="small"
+                      value={ctaText}
+                      onChange={(e) => {
+                        setLockedSnapshot(null);
+                        setCtaText(e.target.value);
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+
+                <TextField
+                  id="poster-footer-tagline"
+                  label="Footer Closing Tagline"
+                  fullWidth
+                  size="small"
+                  margin="dense"
+                  value={footerTagline}
+                  onChange={(e) => {
+                    setLockedSnapshot(null);
+                    setFooterTagline(e.target.value);
+                  }}
+                />
+
+                <TextField
+                  id="poster-portrait-url"
+                  label="Custom Portrait Image URL (optional)"
+                  fullWidth
+                  size="small"
+                  margin="dense"
+                  placeholder="/poster-assets/bride-portrait-arch.png"
+                  value={portraitUrl}
+                  onChange={(e) => {
+                    setLockedSnapshot(null);
+                    setPortraitUrl(e.target.value);
+                  }}
                 />
 
                 <TextField
@@ -802,6 +1047,20 @@ export default function AdminPosterStudioPage() {
                     validation.errors.validityNote ||
                     "Leave blank if there is no specific date restriction."
                   }
+                />
+
+                <FormControlLabel
+                  sx={{ mt: 0.5 }}
+                  control={
+                    <Checkbox
+                      checked={showQrCode}
+                      onChange={(e) => {
+                        setLockedSnapshot(null);
+                        setShowQrCode(e.target.checked);
+                      }}
+                    />
+                  }
+                  label="Display Scannable Booking QR Code in Footer"
                 />
 
                 <Divider sx={{ my: 2.5 }} />
@@ -959,20 +1218,21 @@ export default function AdminPosterStudioPage() {
                   )}
                 </Box>
 
-                {/* Accessible Snapshot Preview Card */}
+                {/* Accessible Luxury Snapshot Preview Card */}
                 <Box
                   data-testid="poster-snapshot-preview"
                   sx={{
                     p: 3,
                     borderRadius: 2,
                     bgcolor:
-                      displayedSnapshot.template.theme?.background || "#FEFBF6",
-                    border: displayedSnapshot.template.layout_config
-                      ?.show_border
-                      ? `4px solid ${
-                          displayedSnapshot.template.theme?.primary || "#d81b60"
-                        }`
-                      : "1px solid #e0e0e0",
+                      displayedSnapshot.template.theme?.background || "#0f0506",
+                    color:
+                      displayedSnapshot.template.theme?.textPrimary ||
+                      "#fdf8f2",
+                    border: `3px solid ${
+                      displayedSnapshot.template.theme?.secondary || "#d4af63"
+                    }`,
+                    boxShadow: "inset 0 0 0 2px rgba(212, 175, 99, 0.35)",
                     textAlign: "center",
                     mb: 3,
                   }}
@@ -992,8 +1252,9 @@ export default function AdminPosterStudioPage() {
                     sx={{
                       fontFamily: `'${displayedSnapshot.brand.heading_font}', serif`,
                       color:
-                        displayedSnapshot.template.theme?.primary || "#d81b60",
+                        displayedSnapshot.template.theme?.accent || "#f1cf85",
                       fontWeight: 700,
+                      letterSpacing: 1,
                     }}
                   >
                     {displayedSnapshot.brand.brand_name}
@@ -1003,78 +1264,134 @@ export default function AdminPosterStudioPage() {
                     component="h3"
                     sx={{
                       fontFamily: `'${displayedSnapshot.brand.heading_font}', serif`,
+                      color:
+                        displayedSnapshot.template.theme?.primary || "#e05368",
                       fontWeight: 700,
-                      mt: 1,
+                      fontStyle: "italic",
+                      mt: 0.5,
                     }}
                   >
                     {displayedSnapshot.campaign.headline}
                   </Typography>
                   {displayedSnapshot.campaign.subheadline && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 2 }}
+                    <Box
+                      sx={{
+                        display: "inline-block",
+                        px: 2.5,
+                        py: 0.5,
+                        my: 1,
+                        borderRadius: 1,
+                        bgcolor:
+                          displayedSnapshot.template.theme?.secondary ||
+                          "#d4af63",
+                        color: "#1b080a",
+                        fontWeight: 700,
+                        fontStyle: "italic",
+                      }}
                     >
-                      {displayedSnapshot.campaign.subheadline}
-                    </Typography>
+                      ❈ {displayedSnapshot.campaign.subheadline} ❈
+                    </Box>
                   )}
 
                   <Grid container spacing={2} sx={{ mt: 1, mb: 2 }}>
-                    {displayedSnapshot.offerings.map((off) => (
-                      <Grid
-                        size={{
-                          xs: 12,
-                          sm:
-                            Number(
-                              displayedSnapshot.template.layout_config?.columns
-                            ) === 1 || displayedSnapshot.offerings.length === 1
-                              ? 12
-                              : 6,
-                        }}
-                        key={`${off.kind}-${off.id}`}
-                      >
-                        <Card
-                          variant="outlined"
-                          sx={{
-                            textAlign: "left",
-                            borderTop: `4px solid ${
-                              displayedSnapshot.template.theme?.primary ||
-                              "#d81b60"
-                            }`,
+                    {displayedSnapshot.offerings.map((off, idx) => {
+                      const defaultCols = [
+                        "#4e1014",
+                        "#261326",
+                        "#4f3811",
+                        "#0c3329",
+                      ];
+                      const cardBg =
+                        off.card_color || defaultCols[idx % defaultCols.length];
+                      return (
+                        <Grid
+                          size={{
+                            xs: 12,
+                            sm:
+                              Number(
+                                displayedSnapshot.template.layout_config
+                                  ?.columns
+                              ) === 1 ||
+                              displayedSnapshot.offerings.length === 1
+                                ? 12
+                                : 6,
                           }}
+                          key={`${off.kind}-${off.id}`}
                         >
-                          <CardContent sx={{ p: 2 }}>
-                            <Box
-                              display="flex"
-                              justifyContent="space-between"
-                              alignItems="baseline"
-                              gap={1}
-                            >
-                              <Typography variant="subtitle1" fontWeight="bold">
-                                {off.name}
-                              </Typography>
-                              <Typography
-                                variant="h6"
-                                color="primary.main"
-                                fontWeight="bold"
+                          <Card
+                            variant="outlined"
+                            sx={{
+                              textAlign: "left",
+                              bgcolor: cardBg,
+                              color: "#fdf8f2",
+                              border: "1.5px solid #d4af63",
+                            }}
+                          >
+                            <CardContent sx={{ p: 2 }}>
+                              {off.badge_text && (
+                                <Chip
+                                  label={off.badge_text}
+                                  size="small"
+                                  sx={{
+                                    mb: 0.5,
+                                    bgcolor: "#e5b55f",
+                                    color: "#1e0708",
+                                    fontWeight: 700,
+                                  }}
+                                />
+                              )}
+                              <Box
+                                display="flex"
+                                justifyContent="space-between"
+                                alignItems="baseline"
+                                gap={1}
                               >
-                                {off.price_formatted}
-                              </Typography>
-                            </Box>
-                            {off.items.map((line, idx) => (
-                              <Typography
-                                key={idx}
-                                variant="caption"
-                                display="block"
-                                color="text.secondary"
-                              >
-                                ★ {line}
-                              </Typography>
-                            ))}
-                          </CardContent>
-                        </Card>
-                      </Grid>
-                    ))}
+                                <Typography
+                                  variant="subtitle1"
+                                  fontWeight="bold"
+                                  sx={{ color: "#f1cf85" }}
+                                >
+                                  {off.name}
+                                </Typography>
+                                <Typography
+                                  variant="h6"
+                                  fontWeight="bold"
+                                  sx={{ color: "#fff1c1" }}
+                                >
+                                  {off.price_formatted}
+                                </Typography>
+                              </Box>
+                              {off.items.map((line, lineIdx) => (
+                                <Typography
+                                  key={lineIdx}
+                                  variant="caption"
+                                  display="block"
+                                  sx={{ color: "#f5ebe6", mt: 0.25 }}
+                                >
+                                  ✦ {line}
+                                </Typography>
+                              ))}
+                              {off.tagline && (
+                                <Typography
+                                  variant="caption"
+                                  display="block"
+                                  sx={{
+                                    color: "#f1cf85",
+                                    fontWeight: "bold",
+                                    mt: 1,
+                                    pt: 0.5,
+                                    borderTop:
+                                      "1px dashed rgba(212,175,99,0.4)",
+                                  }}
+                                >
+                                  {off.tagline}
+                                </Typography>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      );
+                    })}
                   </Grid>
 
                   {displayedSnapshot.campaign.validity_note && (
@@ -1083,7 +1400,7 @@ export default function AdminPosterStudioPage() {
                       fontWeight="bold"
                       display="block"
                       sx={{
-                        color: displayedSnapshot.festival.accent_color,
+                        color: "#f1cf85",
                         mb: 1,
                       }}
                     >
@@ -1093,21 +1410,37 @@ export default function AdminPosterStudioPage() {
 
                   <Box
                     sx={{
-                      bgcolor:
-                        displayedSnapshot.template.theme?.primary || "#d81b60",
+                      bgcolor: "#1a0709",
+                      border: "1px solid #d4af63",
                       color: "#fff",
                       p: 1.5,
                       borderRadius: 1,
                     }}
                   >
+                    <Typography
+                      variant="body2"
+                      fontWeight="bold"
+                      sx={{ color: "#f1cf85" }}
+                    >
+                      {displayedSnapshot.campaign.cta_text ||
+                        "BOOK YOUR APPOINTMENT NOW!"}
+                    </Typography>
                     <Typography variant="body2" fontWeight="bold">
-                      Book Now: {displayedSnapshot.contact.contact_name} &bull;
-                      📞 {displayedSnapshot.contact.phone} &bull; WhatsApp:{" "}
-                      {displayedSnapshot.contact.whatsapp}
+                      📞 {displayedSnapshot.contact.phone} (Call/WhatsApp)
+                      &bull; WhatsApp: {displayedSnapshot.contact.whatsapp}
                     </Typography>
                     <Typography variant="caption" display="block">
                       📍 {displayedSnapshot.contact.address}
                     </Typography>
+                    {displayedSnapshot.campaign.footer_tagline && (
+                      <Typography
+                        variant="caption"
+                        display="block"
+                        sx={{ color: "#e05368", fontWeight: "bold", mt: 0.5 }}
+                      >
+                        {displayedSnapshot.campaign.footer_tagline} ♥
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
 
@@ -1119,7 +1452,7 @@ export default function AdminPosterStudioPage() {
                     display="block"
                     mb={1}
                   >
-                    High-Resolution Canvas Render Surface (
+                    High-Resolution Fabric.js Canvas Surface (
                     {displayedSnapshot.template.width} ×{" "}
                     {displayedSnapshot.template.height})
                   </Typography>
@@ -1129,8 +1462,9 @@ export default function AdminPosterStudioPage() {
                     style={{
                       maxWidth: "100%",
                       height: "auto",
-                      border: "1px solid #ddd",
-                      borderRadius: "4px",
+                      border: "2px solid #d4af63",
+                      borderRadius: "6px",
+                      backgroundColor: "#0f0506",
                     }}
                   />
                 </Box>
