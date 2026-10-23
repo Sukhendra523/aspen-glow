@@ -18,14 +18,15 @@
 - [x] **Ticket 5: Bundle Management CRUD (`/admin/bundles`)** *(Completed — 32/32 tests passing)*
 - [x] **Ticket 6: Media Library & Safe Asset Upload (`/admin/media`)** *(Completed — 36/36 tests passing)*
 - [x] **Ticket 7: Festival Catalogue & Poster Templates (`/admin/posters`)** *(Completed — 41/41 tests passing)*
-- [x] **Ticket 8: Poster Studio Draft Persistence & PNG Export (`/admin/posters`)** *(Implemented — awaiting user test run)*
+- [x] **Ticket 8: Poster Studio Draft Persistence & PNG Export (`/admin/posters`)** *(Completed — 45/45 tests passing across 8 suites)*
   - Fixed unmounted/null-client `act(...)` warning in `src/pages/PublicHomePage.js` and `src/__tests__/BrandContactSettings.test.js`.
   - Added `buildPosterExportFilename` and `exportPosterToPng` in `src/poster/posterRenderer.js`.
   - Created `src/services/posterService.js` (`fetchAdminPosters`, `savePosterDraft`, `recordPosterExportMetadata`, `archivePosterRecord`).
   - Updated `src/pages/admin/AdminPosterStudioPage.js` with Save/Update Draft, Reopen Saved Snapshot (`Snapshot Mode: Immutable`), explicit Refresh Snapshot option, PNG Export with retryable error alert, and Archive Poster Draft confirmation.
   - Added `src/__tests__/PosterPersistenceAndExport.test.js`.
+  - Fixed React Router v7 `v7_relativeSplatPath` & `v7_startTransition` future-flag warnings in `src/App.js` and all test suites (`src/__tests__/*.test.js`), and stubbed `HTMLCanvasElement.prototype.getContext` in `src/setupTests.js` to silence jsdom `Not implemented` console errors.
 
 ## Current Checkpoint
-- **Active Ticket:** Ticket 8 (`feat/poster-persistence-and-export`)
-- **Files Changed:** `src/pages/PublicHomePage.js`, `src/poster/posterRenderer.js`, `src/services/posterService.js`, `src/pages/admin/AdminPosterStudioPage.js`, `src/__tests__/BrandContactSettings.test.js`, `src/__tests__/PosterTemplates.test.js`, `src/__tests__/PosterPersistenceAndExport.test.js`, `docs/WORK_LOG.md`.
-- **Next Action:** User runs `npm test -- --watchAll=false` to verify all 8 ticket test suites and `npm run build` for final release verification.
+- **Active Ticket:** Ticket 8 (`feat/poster-persistence-and-export`) — Console warning fixes applied
+- **Files Changed:** `src/setupTests.js`, `src/App.js`, `src/__tests__/AdminAuth.test.js`, `src/__tests__/BrandContactSettings.test.js`, `src/__tests__/ServiceCatalogue.test.js`, `src/__tests__/PackageManagement.test.js`, `src/__tests__/BundleManagement.test.js`, `src/__tests__/MediaLibrary.test.js`, `src/__tests__/PosterTemplates.test.js`, `src/__tests__/PosterPersistenceAndExport.test.js`, `docs/WORK_LOG.md`.
+- **Next Action:** User runs `npm test -- --watchAll=false` to verify zero console warnings/errors across all 8 test suites.

@@ -133,7 +133,13 @@ function renderApp(initialEntries = ["/admin/services"], client = null) {
   return render(
     <ThemeProvider theme={theme}>
       <AuthProvider client={client}>
-        <MemoryRouter initialEntries={initialEntries}>
+        <MemoryRouter
+          initialEntries={initialEntries}
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
           <AppRoutes />
         </MemoryRouter>
       </AuthProvider>
