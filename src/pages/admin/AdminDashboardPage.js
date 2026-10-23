@@ -64,8 +64,10 @@ const CMS_MODULES = [
     title: "Festival Poster Studio",
     description:
       "Create festival campaign posters with immutable content snapshots and PNG export.",
-    status: "Tickets 7–8",
-    active: false,
+    status: "Active",
+    active: true,
+    path: "/admin/posters",
+    actionLabel: "Open Poster Studio",
   },
 ];
 

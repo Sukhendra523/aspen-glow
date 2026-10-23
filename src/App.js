@@ -13,6 +13,7 @@ import AdminServicesPage from "./pages/admin/AdminServicesPage";
 import AdminPackagesPage from "./pages/admin/AdminPackagesPage";
 import AdminBundlesPage from "./pages/admin/AdminBundlesPage";
 import AdminMediaPage from "./pages/admin/AdminMediaPage";
+import AdminPosterStudioPage from "./pages/admin/AdminPosterStudioPage";
 
 export function AppRoutes() {
   return (
@@ -65,6 +66,14 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <AdminMediaPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/posters"
+        element={
+          <ProtectedRoute>
+            <AdminPosterStudioPage />
           </ProtectedRoute>
         }
       />
