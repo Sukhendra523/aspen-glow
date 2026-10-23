@@ -38,14 +38,27 @@ const CMS_MODULES = [
     title: "Packages",
     description:
       "Create and publish multi-service beauty packages with standalone pricing.",
-    status: "Ticket 4",
-    active: false,
+    status: "Active",
+    active: true,
+    path: "/admin/packages",
+    actionLabel: "Manage Packages",
   },
   {
     title: "Bundles",
     description: "Combine existing packages into promotional bundles.",
-    status: "Ticket 5",
-    active: false,
+    status: "Active",
+    active: true,
+    path: "/admin/bundles",
+    actionLabel: "Manage Bundles",
+  },
+  {
+    title: "Media Library",
+    description:
+      "Upload and manage approved brand logos and festival poster motifs.",
+    status: "Active",
+    active: true,
+    path: "/admin/media",
+    actionLabel: "Manage Media",
   },
   {
     title: "Festival Poster Studio",

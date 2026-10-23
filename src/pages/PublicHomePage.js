@@ -11,19 +11,33 @@ import {
 } from "../constants/defaultSettings";
 import { buildSalonTheme } from "../constants/theme";
 import { fetchPublicSiteSettings } from "../services/settingsService";
+import { fetchPublishedServices } from "../services/serviceCatalogueService";
+import { fetchPublishedPackages } from "../services/packageService";
+import { fetchPublishedBundles } from "../services/bundleService";
 import { useAuth } from "../context/AuthContext";
 
 export default function PublicHomePage() {
   const { client } = useAuth();
   const [brand, setBrand] = useState(DEFAULT_BRAND_SETTINGS);
   const [contact, setContact] = useState(DEFAULT_CONTACT_SETTINGS);
+  const [publishedServices, setPublishedServices] = useState([]);
+  const [publishedPackages, setPublishedPackages] = useState([]);
+  const [publishedBundles, setPublishedBundles] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
-    fetchPublicSiteSettings(client).then((result) => {
+    Promise.all([
+      fetchPublicSiteSettings(client),
+      fetchPublishedServices(client),
+      fetchPublishedPackages(client),
+      fetchPublishedBundles(client),
+    ]).then(([settingsRes, servicesRes, packagesRes, bundlesRes]) => {
       if (!isMounted) return;
-      setBrand(result.brand);
-      setContact(result.contact);
+      setBrand(settingsRes.brand);
+      setContact(settingsRes.contact);
+      setPublishedServices(servicesRes.data || []);
+      setPublishedPackages(packagesRes.data || []);
+      setPublishedBundles(bundlesRes.data || []);
     });
     return () => {
       isMounted = false;
@@ -38,7 +52,11 @@ export default function PublicHomePage() {
       <Navbar brand={brand} />
       <main>
         <Hero brand={brand} />
-        <Services />
+        <Services
+          publishedServices={publishedServices}
+          publishedPackages={publishedPackages}
+          publishedBundles={publishedBundles}
+        />
         <Contact contact={contact} />
       </main>
       <Footer brand={brand} />

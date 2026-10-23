@@ -10,6 +10,9 @@ import AdminResetPasswordPage from "./pages/admin/AdminResetPasswordPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import AdminServicesPage from "./pages/admin/AdminServicesPage";
+import AdminPackagesPage from "./pages/admin/AdminPackagesPage";
+import AdminBundlesPage from "./pages/admin/AdminBundlesPage";
+import AdminMediaPage from "./pages/admin/AdminMediaPage";
 
 export function AppRoutes() {
   return (
@@ -38,6 +41,30 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <AdminServicesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/packages"
+        element={
+          <ProtectedRoute>
+            <AdminPackagesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/bundles"
+        element={
+          <ProtectedRoute>
+            <AdminBundlesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/media"
+        element={
+          <ProtectedRoute>
+            <AdminMediaPage />
           </ProtectedRoute>
         }
       />
