@@ -25,6 +25,10 @@ export default function PublicHomePage() {
   const [publishedBundles, setPublishedBundles] = useState([]);
 
   useEffect(() => {
+    if (!client) {
+      return undefined;
+    }
+
     let isMounted = true;
     Promise.all([
       fetchPublicSiteSettings(client),

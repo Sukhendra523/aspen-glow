@@ -6,6 +6,7 @@ import {
   Box,
   Button,
   Card,
+  CardActions,
   CardContent,
   Checkbox,
   Chip,
@@ -14,6 +15,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   Divider,
   FormControlLabel,
@@ -35,7 +37,10 @@ import {
   POSTER_FORMATS,
   POSTER_THEMES,
 } from "../../poster/posterTemplates";
-import { renderPosterToCanvas } from "../../poster/posterRenderer";
+import {
+  exportPosterToPng,
+  renderPosterToCanvas,
+} from "../../poster/posterRenderer";
 import {
   buildPosterSnapshot,
   validatePosterCampaignInput,
@@ -48,6 +53,12 @@ import {
   fetchAdminFestivals,
   fetchPosterTemplates,
 } from "../../services/festivalService";
+import {
+  archivePosterRecord,
+  fetchAdminPosters,
+  recordPosterExportMetadata,
+  savePosterDraft,
+} from "../../services/posterService";
 import { useAuth } from "../../context/AuthContext";
 
 export default function AdminPosterStudioPage() {
@@ -63,6 +74,10 @@ export default function AdminPosterStudioPage() {
   const [templates, setTemplates] = useState(DEFAULT_POSTER_TEMPLATES);
   const [packages, setPackages] = useState([]);
   const [bundles, setBundles] = useState([]);
+  const [savedPosters, setSavedPosters] = useState([]);
+
+  const [editingPosterId, setEditingPosterId] = useState(null);
+  const [lockedSnapshot, setLockedSnapshot] = useState(null);
 
   const [campaignName, setCampaignName] = useState(
     "Karwa Chauth Festive Campaign"
@@ -86,6 +101,14 @@ export default function AdminPosterStudioPage() {
   const [selectedPackageIds, setSelectedPackageIds] = useState([]);
   const [selectedBundleIds, setSelectedBundleIds] = useState([]);
 
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [draftError, setDraftError] = useState("");
+  const [exportError, setExportError] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
+
+  const [archiveTarget, setArchiveTarget] = useState(null);
+  const [archivingPoster, setArchivingPoster] = useState(false);
+
   // Custom Festival Dialog state
   const [festivalDialogOpen, setFestivalDialogOpen] = useState(false);
   const [newFestivalForm, setNewFestivalForm] = useState({
@@ -99,7 +122,6 @@ export default function AdminPosterStudioPage() {
   const [festivalFieldErrors, setFestivalFieldErrors] = useState({});
   const [festivalFormError, setFestivalFormError] = useState("");
   const [savingFestival, setSavingFestival] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -110,7 +132,8 @@ export default function AdminPosterStudioPage() {
       fetchPosterTemplates(client),
       fetchAdminPackages(client),
       fetchAdminBundles(client),
-    ]).then(([settingsRes, festRes, tplRes, pkgRes, bndRes]) => {
+      fetchAdminPosters(client),
+    ]).then(([settingsRes, festRes, tplRes, pkgRes, bndRes, postersRes]) => {
       if (!isMounted) return;
       setBrand(settingsRes.brand);
       setContact(settingsRes.contact);
@@ -139,6 +162,7 @@ export default function AdminPosterStudioPage() {
       );
       setPackages(activePkgs);
       setBundles(activeBnds);
+      setSavedPosters(postersRes.data || []);
 
       if (activePkgs.length > 0) {
         setSelectedPackageIds(activePkgs.slice(0, 2).map((p) => p.id));
@@ -204,7 +228,7 @@ export default function AdminPosterStudioPage() {
     ]
   );
 
-  const activeSnapshot = useMemo(
+  const liveSnapshot = useMemo(
     () =>
       buildPosterSnapshot({
         campaignName,
@@ -236,14 +260,19 @@ export default function AdminPosterStudioPage() {
     ]
   );
 
+  // When a saved poster is reopened, displayedSnapshot uses its immutable content_snapshot
+  // unless the owner edits campaign fields or explicitly clicks "Refresh Snapshot with Current Catalogue Data".
+  const displayedSnapshot = lockedSnapshot || liveSnapshot;
+
   useEffect(() => {
-    if (canvasRef.current && activeSnapshot) {
-      renderPosterToCanvas(canvasRef.current, activeSnapshot);
+    if (canvasRef.current && displayedSnapshot) {
+      renderPosterToCanvas(canvasRef.current, displayedSnapshot);
     }
-  }, [activeSnapshot]);
+  }, [displayedSnapshot]);
 
   const handleFestivalSelect = (event) => {
     const nextId = event.target.value;
+    setLockedSnapshot(null);
     setSelectedFestivalId(nextId);
     const fest = festivals.find((f) => f.id === nextId);
     if (fest) {
@@ -254,6 +283,7 @@ export default function AdminPosterStudioPage() {
   };
 
   const handleTogglePackage = (pkgId) => {
+    setLockedSnapshot(null);
     setSelectedPackageIds((prev) =>
       prev.includes(pkgId)
         ? prev.filter((id) => id !== pkgId)
@@ -262,11 +292,161 @@ export default function AdminPosterStudioPage() {
   };
 
   const handleToggleBundle = (bundleId) => {
+    setLockedSnapshot(null);
     setSelectedBundleIds((prev) =>
       prev.includes(bundleId)
         ? prev.filter((id) => id !== bundleId)
         : [...prev, bundleId]
     );
+  };
+
+  const handleSaveDraft = async () => {
+    setDraftError("");
+    setExportError("");
+    setStatusMessage("");
+
+    const snapshotToSave = displayedSnapshot;
+    if (!lockedSnapshot && !validation.valid) {
+      setDraftError(
+        validation.errors.campaignName ||
+          validation.errors.headline ||
+          validation.errors.offerings ||
+          "Please fix the highlighted campaign fields before saving."
+      );
+      return;
+    }
+
+    setSavingDraft(true);
+    const result = await savePosterDraft(
+      {
+        id: editingPosterId,
+        campaignName: snapshotToSave.campaign?.campaign_name || campaignName,
+        festivalId: snapshotToSave.festival?.id || activeFestival?.id || null,
+        templateKey:
+          snapshotToSave.template?.template_key || activeTemplate.template_key,
+        templateVersion:
+          snapshotToSave.template?.version || activeTemplate.version || 1,
+        formatKey: snapshotToSave.template?.format_key || formatKey,
+        structuredConfig: {
+          themeKey: snapshotToSave.template?.theme_key || themeKey,
+          selectedPackageIds,
+          selectedBundleIds,
+        },
+        snapshot: snapshotToSave,
+      },
+      client
+    );
+    setSavingDraft(false);
+
+    if (result.error) {
+      setDraftError(result.error);
+      return;
+    }
+
+    const saved = result.data;
+    setEditingPosterId(saved.id);
+    setSavedPosters((prev) => {
+      const exists = prev.some((p) => p.id === saved.id);
+      if (exists) {
+        return prev.map((p) => (p.id === saved.id ? saved : p));
+      }
+      return [saved, ...prev];
+    });
+    setStatusMessage(
+      `Saved poster draft "${saved.campaign_name}" (not published to public website).`
+    );
+  };
+
+  const handleExportPng = async () => {
+    setExportError("");
+    setDraftError("");
+    setStatusMessage("");
+
+    const result = exportPosterToPng(canvasRef.current, displayedSnapshot);
+    if (!result.ok) {
+      setExportError(result.error);
+      return;
+    }
+
+    if (editingPosterId) {
+      await recordPosterExportMetadata(
+        editingPosterId,
+        {
+          filename: result.filename,
+          width: result.width,
+          height: result.height,
+          formatKey: displayedSnapshot.template?.format_key || formatKey,
+        },
+        client
+      );
+    }
+
+    setStatusMessage(`Exported PNG "${result.filename}".`);
+  };
+
+  const handleOpenSavedPoster = (poster) => {
+    setDraftError("");
+    setExportError("");
+    setStatusMessage("");
+    setEditingPosterId(poster.id);
+
+    const snap = poster.content_snapshot;
+    setLockedSnapshot(snap);
+    setCampaignName(
+      snap?.campaign?.campaign_name || poster.campaign_name || ""
+    );
+    setHeadline(snap?.campaign?.headline || "");
+    setSubheadline(snap?.campaign?.subheadline || "");
+    setValidityNote(snap?.campaign?.validity_note || "");
+    if (snap?.template?.template_key) {
+      setSelectedTemplateKey(snap.template.template_key);
+    }
+    if (snap?.template?.format_key) {
+      setFormatKey(snap.template.format_key);
+    }
+    if (snap?.template?.theme_key) {
+      setThemeKey(snap.template.theme_key);
+    }
+    if (Array.isArray(poster.structured_config?.selectedPackageIds)) {
+      setSelectedPackageIds(poster.structured_config.selectedPackageIds);
+    }
+    if (Array.isArray(poster.structured_config?.selectedBundleIds)) {
+      setSelectedBundleIds(poster.structured_config.selectedBundleIds);
+    }
+  };
+
+  const handleResetNewPoster = () => {
+    setEditingPosterId(null);
+    setLockedSnapshot(null);
+    setDraftError("");
+    setExportError("");
+    setStatusMessage("");
+  };
+
+  const handleConfirmArchivePoster = async () => {
+    if (!archiveTarget) return;
+    setArchivingPoster(true);
+    setDraftError("");
+    setStatusMessage("");
+
+    const result = await archivePosterRecord(archiveTarget.id, client);
+    setArchivingPoster(false);
+
+    if (result.error) {
+      setDraftError(result.error);
+      setArchiveTarget(null);
+      return;
+    }
+
+    const updated = result.data;
+    setSavedPosters((prev) =>
+      prev.map((item) => (item.id === updated.id ? updated : item))
+    );
+    if (editingPosterId === updated.id) {
+      handleResetNewPoster();
+    }
+    setStatusMessage(`Archived poster draft "${updated.campaign_name}".`);
+    setArchiveTarget(null);
   };
 
   const handleCreateFestival = async (event) => {
@@ -286,6 +466,7 @@ export default function AdminPosterStudioPage() {
 
     const created = result.data;
     setFestivals((prev) => [...prev, created]);
+    setLockedSnapshot(null);
     setSelectedFestivalId(created.id);
     setHeadline(created.default_headline || "");
     setSubheadline(created.default_subheadline || "");
@@ -301,6 +482,11 @@ export default function AdminPosterStudioPage() {
     });
     setStatusMessage(`Added festival "${created.name}".`);
   };
+
+  const activeDraftPosters = useMemo(
+    () => savedPosters.filter((p) => p.status !== "archived"),
+    [savedPosters]
+  );
 
   if (loading) {
     return (
@@ -376,9 +562,57 @@ export default function AdminPosterStudioPage() {
           </Alert>
         )}
 
+        {draftError && (
+          <Alert severity="error" role="alert" sx={{ mb: 3 }}>
+            {draftError}
+          </Alert>
+        )}
+
+        {exportError && (
+          <Alert
+            severity="error"
+            role="alert"
+            sx={{ mb: 3 }}
+            action={
+              <Button
+                type="button"
+                color="inherit"
+                size="small"
+                onClick={handleExportPng}
+              >
+                Retry PNG Export
+              </Button>
+            }
+          >
+            {exportError}
+          </Alert>
+        )}
+
         {statusMessage && (
           <Alert severity="success" role="status" sx={{ mb: 3 }}>
             {statusMessage}
+          </Alert>
+        )}
+
+        {lockedSnapshot && (
+          <Alert
+            severity="info"
+            sx={{ mb: 3 }}
+            action={
+              <Button
+                type="button"
+                color="inherit"
+                size="small"
+                onClick={() => setLockedSnapshot(null)}
+              >
+                Refresh Snapshot with Current Catalogue Data
+              </Button>
+            }
+          >
+            Viewing immutable saved snapshot for{" "}
+            <strong>{lockedSnapshot.campaign?.campaign_name}</strong>. Source
+            catalogue price edits do not alter this saved poster unless you
+            refresh it.
           </Alert>
         )}
 
@@ -396,19 +630,33 @@ export default function AdminPosterStudioPage() {
                   display="flex"
                   justifyContent="space-between"
                   alignItems="center"
+                  flexWrap="wrap"
+                  gap={1}
                   mb={2}
                 >
                   <Typography variant="h5" component="h1" fontWeight="bold">
                     Poster Configuration
                   </Typography>
-                  <Button
-                    type="button"
-                    size="small"
-                    variant="outlined"
-                    onClick={() => setFestivalDialogOpen(true)}
-                  >
-                    + Add Festival
-                  </Button>
+                  <Box display="flex" gap={1}>
+                    {editingPosterId && (
+                      <Button
+                        type="button"
+                        size="small"
+                        variant="text"
+                        onClick={handleResetNewPoster}
+                      >
+                        + New Poster
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      size="small"
+                      variant="outlined"
+                      onClick={() => setFestivalDialogOpen(true)}
+                    >
+                      + Add Festival
+                    </Button>
+                  </Box>
                 </Box>
 
                 <TextField
@@ -434,7 +682,10 @@ export default function AdminPosterStudioPage() {
                   fullWidth
                   margin="normal"
                   value={selectedTemplateKey}
-                  onChange={(e) => setSelectedTemplateKey(e.target.value)}
+                  onChange={(e) => {
+                    setLockedSnapshot(null);
+                    setSelectedTemplateKey(e.target.value);
+                  }}
                 >
                   {templates.map((tpl) => (
                     <MenuItem key={tpl.template_key} value={tpl.template_key}>
@@ -452,7 +703,10 @@ export default function AdminPosterStudioPage() {
                       label="Output Dimensions"
                       fullWidth
                       value={formatKey}
-                      onChange={(e) => setFormatKey(e.target.value)}
+                      onChange={(e) => {
+                        setLockedSnapshot(null);
+                        setFormatKey(e.target.value);
+                      }}
                     >
                       {Object.values(POSTER_FORMATS).map((fmt) => (
                         <MenuItem key={fmt.key} value={fmt.key}>
@@ -468,7 +722,10 @@ export default function AdminPosterStudioPage() {
                       label="Color Theme"
                       fullWidth
                       value={themeKey}
-                      onChange={(e) => setThemeKey(e.target.value)}
+                      onChange={(e) => {
+                        setLockedSnapshot(null);
+                        setThemeKey(e.target.value);
+                      }}
                     >
                       {Object.values(POSTER_THEMES).map((thm) => (
                         <MenuItem key={thm.key} value={thm.key}>
@@ -492,7 +749,10 @@ export default function AdminPosterStudioPage() {
                   required
                   margin="dense"
                   value={campaignName}
-                  onChange={(e) => setCampaignName(e.target.value)}
+                  onChange={(e) => {
+                    setLockedSnapshot(null);
+                    setCampaignName(e.target.value);
+                  }}
                   error={Boolean(validation.errors.campaignName)}
                   helperText={validation.errors.campaignName}
                 />
@@ -504,7 +764,10 @@ export default function AdminPosterStudioPage() {
                   required
                   margin="dense"
                   value={headline}
-                  onChange={(e) => setHeadline(e.target.value)}
+                  onChange={(e) => {
+                    setLockedSnapshot(null);
+                    setHeadline(e.target.value);
+                  }}
                   error={Boolean(validation.errors.headline)}
                   helperText={validation.errors.headline}
                 />
@@ -515,7 +778,10 @@ export default function AdminPosterStudioPage() {
                   fullWidth
                   margin="dense"
                   value={subheadline}
-                  onChange={(e) => setSubheadline(e.target.value)}
+                  onChange={(e) => {
+                    setLockedSnapshot(null);
+                    setSubheadline(e.target.value);
+                  }}
                   error={Boolean(validation.errors.subheadline)}
                   helperText={validation.errors.subheadline}
                 />
@@ -527,7 +793,10 @@ export default function AdminPosterStudioPage() {
                   margin="dense"
                   placeholder="Valid until Diwali Eve • Prior appointment required"
                   value={validityNote}
-                  onChange={(e) => setValidityNote(e.target.value)}
+                  onChange={(e) => {
+                    setLockedSnapshot(null);
+                    setValidityNote(e.target.value);
+                  }}
                   error={Boolean(validation.errors.validityNote)}
                   helperText={
                     validation.errors.validityNote ||
@@ -555,7 +824,7 @@ export default function AdminPosterStudioPage() {
                   />
                 </Box>
 
-                {validation.errors.offerings && (
+                {validation.errors.offerings && !lockedSnapshot && (
                   <Alert severity="error" role="alert" sx={{ mb: 2 }}>
                     {validation.errors.offerings}
                   </Alert>
@@ -624,7 +893,7 @@ export default function AdminPosterStudioPage() {
             </Card>
           </Grid>
 
-          {/* Right Column: Live Snapshot & Artwork Preview */}
+          {/* Right Column: Live Snapshot, Export Actions & Saved Drafts */}
           <Grid size={{ xs: 12, md: 7 }}>
             <Card sx={{ mb: 3 }}>
               <CardContent sx={{ p: 3 }}>
@@ -633,24 +902,61 @@ export default function AdminPosterStudioPage() {
                   justifyContent="space-between"
                   alignItems="center"
                   flexWrap="wrap"
-                  gap={1}
+                  gap={1.5}
                   mb={2}
                 >
-                  <Typography variant="h5" component="h2" fontWeight="bold">
-                    Live Poster Artwork Preview
-                  </Typography>
-                  <Box display="flex" gap={1}>
-                    <Chip
-                      label={`${activeSnapshot.template.name} (v${activeSnapshot.template.version})`}
-                      size="small"
-                      variant="outlined"
-                    />
-                    <Chip
-                      label={`${activeSnapshot.template.width} × ${activeSnapshot.template.height} px`}
-                      size="small"
-                      color="primary"
-                    />
+                  <Box>
+                    <Typography variant="h5" component="h2" fontWeight="bold">
+                      Live Poster Artwork Preview
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Saving a draft or exporting a PNG does not publish content
+                      to the public website.
+                    </Typography>
                   </Box>
+                  <Box display="flex" gap={1.5} flexWrap="wrap">
+                    <Button
+                      type="button"
+                      variant="outlined"
+                      color="primary"
+                      disabled={savingDraft}
+                      onClick={handleSaveDraft}
+                    >
+                      {savingDraft
+                        ? "Saving Draft..."
+                        : editingPosterId
+                        ? "Update Poster Draft"
+                        : "Save Poster Draft"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="contained"
+                      color="primary"
+                      onClick={handleExportPng}
+                    >
+                      Export PNG
+                    </Button>
+                  </Box>
+                </Box>
+
+                <Box display="flex" gap={1} mb={2} flexWrap="wrap">
+                  <Chip
+                    label={`${displayedSnapshot.template.name} (v${displayedSnapshot.template.version})`}
+                    size="small"
+                    variant="outlined"
+                  />
+                  <Chip
+                    label={`${displayedSnapshot.template.width} × ${displayedSnapshot.template.height} px`}
+                    size="small"
+                    color="primary"
+                  />
+                  {lockedSnapshot && (
+                    <Chip
+                      label="Snapshot Mode: Immutable"
+                      size="small"
+                      color="info"
+                    />
+                  )}
                 </Box>
 
                 {/* Accessible Snapshot Preview Card */}
@@ -660,10 +966,11 @@ export default function AdminPosterStudioPage() {
                     p: 3,
                     borderRadius: 2,
                     bgcolor:
-                      activeSnapshot.template.theme?.background || "#FEFBF6",
-                    border: activeSnapshot.template.layout_config?.show_border
+                      displayedSnapshot.template.theme?.background || "#FEFBF6",
+                    border: displayedSnapshot.template.layout_config
+                      ?.show_border
                       ? `4px solid ${
-                          activeSnapshot.template.theme?.primary || "#d81b60"
+                          displayedSnapshot.template.theme?.primary || "#d81b60"
                         }`
                       : "1px solid #e0e0e0",
                     textAlign: "center",
@@ -671,11 +978,11 @@ export default function AdminPosterStudioPage() {
                   }}
                 >
                   <Chip
-                    label={activeSnapshot.festival.motif_label}
+                    label={displayedSnapshot.festival.motif_label}
                     size="small"
                     sx={{
                       mb: 1,
-                      bgcolor: activeSnapshot.festival.accent_color,
+                      bgcolor: displayedSnapshot.festival.accent_color,
                       color: "#fff",
                       fontWeight: "bold",
                     }}
@@ -683,44 +990,44 @@ export default function AdminPosterStudioPage() {
                   <Typography
                     variant="h5"
                     sx={{
-                      fontFamily: `'${activeSnapshot.brand.heading_font}', serif`,
+                      fontFamily: `'${displayedSnapshot.brand.heading_font}', serif`,
                       color:
-                        activeSnapshot.template.theme?.primary || "#d81b60",
+                        displayedSnapshot.template.theme?.primary || "#d81b60",
                       fontWeight: 700,
                     }}
                   >
-                    {activeSnapshot.brand.brand_name}
+                    {displayedSnapshot.brand.brand_name}
                   </Typography>
                   <Typography
                     variant="h4"
                     component="h3"
                     sx={{
-                      fontFamily: `'${activeSnapshot.brand.heading_font}', serif`,
+                      fontFamily: `'${displayedSnapshot.brand.heading_font}', serif`,
                       fontWeight: 700,
                       mt: 1,
                     }}
                   >
-                    {activeSnapshot.campaign.headline}
+                    {displayedSnapshot.campaign.headline}
                   </Typography>
-                  {activeSnapshot.campaign.subheadline && (
+                  {displayedSnapshot.campaign.subheadline && (
                     <Typography
                       variant="body2"
                       color="text.secondary"
                       sx={{ mb: 2 }}
                     >
-                      {activeSnapshot.campaign.subheadline}
+                      {displayedSnapshot.campaign.subheadline}
                     </Typography>
                   )}
 
                   <Grid container spacing={2} sx={{ mt: 1, mb: 2 }}>
-                    {activeSnapshot.offerings.map((off) => (
+                    {displayedSnapshot.offerings.map((off) => (
                       <Grid
                         size={{
                           xs: 12,
                           sm:
                             Number(
-                              activeSnapshot.template.layout_config?.columns
-                            ) === 1 || activeSnapshot.offerings.length === 1
+                              displayedSnapshot.template.layout_config?.columns
+                            ) === 1 || displayedSnapshot.offerings.length === 1
                               ? 12
                               : 6,
                         }}
@@ -731,7 +1038,7 @@ export default function AdminPosterStudioPage() {
                           sx={{
                             textAlign: "left",
                             borderTop: `4px solid ${
-                              activeSnapshot.template.theme?.primary ||
+                              displayedSnapshot.template.theme?.primary ||
                               "#d81b60"
                             }`,
                           }}
@@ -770,36 +1077,36 @@ export default function AdminPosterStudioPage() {
                     ))}
                   </Grid>
 
-                  {activeSnapshot.campaign.validity_note && (
+                  {displayedSnapshot.campaign.validity_note && (
                     <Typography
                       variant="caption"
                       fontWeight="bold"
                       display="block"
                       sx={{
-                        color: activeSnapshot.festival.accent_color,
+                        color: displayedSnapshot.festival.accent_color,
                         mb: 1,
                       }}
                     >
-                      {activeSnapshot.campaign.validity_note}
+                      {displayedSnapshot.campaign.validity_note}
                     </Typography>
                   )}
 
                   <Box
                     sx={{
                       bgcolor:
-                        activeSnapshot.template.theme?.primary || "#d81b60",
+                        displayedSnapshot.template.theme?.primary || "#d81b60",
                       color: "#fff",
                       p: 1.5,
                       borderRadius: 1,
                     }}
                   >
                     <Typography variant="body2" fontWeight="bold">
-                      Book Now: {activeSnapshot.contact.contact_name} &bull; 📞{" "}
-                      {activeSnapshot.contact.phone} &bull; WhatsApp:{" "}
-                      {activeSnapshot.contact.whatsapp}
+                      Book Now: {displayedSnapshot.contact.contact_name} &bull;
+                      📞 {displayedSnapshot.contact.phone} &bull; WhatsApp:{" "}
+                      {displayedSnapshot.contact.whatsapp}
                     </Typography>
                     <Typography variant="caption" display="block">
-                      📍 {activeSnapshot.contact.address}
+                      📍 {displayedSnapshot.contact.address}
                     </Typography>
                   </Box>
                 </Box>
@@ -813,8 +1120,8 @@ export default function AdminPosterStudioPage() {
                     mb={1}
                   >
                     High-Resolution Canvas Render Surface (
-                    {activeSnapshot.template.width} ×{" "}
-                    {activeSnapshot.template.height})
+                    {displayedSnapshot.template.width} ×{" "}
+                    {displayedSnapshot.template.height})
                   </Typography>
                   <canvas
                     ref={canvasRef}
@@ -827,6 +1134,104 @@ export default function AdminPosterStudioPage() {
                     }}
                   />
                 </Box>
+              </CardContent>
+            </Card>
+
+            {/* Saved Poster Drafts Library */}
+            <Card>
+              <CardContent sx={{ p: 3 }}>
+                <Typography
+                  variant="h6"
+                  component="h2"
+                  fontWeight="bold"
+                  gutterBottom
+                >
+                  Saved Poster Drafts ({activeDraftPosters.length})
+                </Typography>
+                <Typography variant="body2" color="text.secondary" mb={2}>
+                  Each saved draft stores an immutable snapshot of your brand,
+                  contact details, and package prices at the moment it was
+                  saved.
+                </Typography>
+
+                {activeDraftPosters.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    No saved poster drafts yet. Click &ldquo;Save Poster
+                    Draft&rdquo; above to save your campaign.
+                  </Typography>
+                ) : (
+                  <Grid container spacing={2}>
+                    {activeDraftPosters.map((poster) => {
+                      const snap = poster.content_snapshot || {};
+                      const offeringSummary = Array.isArray(snap.offerings)
+                        ? snap.offerings
+                            .map((o) => `${o.name} (${o.price_formatted})`)
+                            .join(" • ")
+                        : "";
+                      return (
+                        <Grid size={{ xs: 12 }} key={poster.id}>
+                          <Card variant="outlined">
+                            <CardContent sx={{ pb: 1 }}>
+                              <Box
+                                display="flex"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                flexWrap="wrap"
+                                gap={1}
+                              >
+                                <Typography
+                                  variant="subtitle1"
+                                  fontWeight="bold"
+                                >
+                                  {poster.campaign_name}
+                                </Typography>
+                                <Box display="flex" gap={1}>
+                                  <Chip
+                                    label={snap.festival?.name || "Festival"}
+                                    size="small"
+                                    variant="outlined"
+                                  />
+                                  <Chip
+                                    label={poster.format_key}
+                                    size="small"
+                                  />
+                                </Box>
+                              </Box>
+                              {offeringSummary && (
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  display="block"
+                                  sx={{ mt: 0.5 }}
+                                >
+                                  Snapshot Offerings: {offeringSummary}
+                                </Typography>
+                              )}
+                            </CardContent>
+                            <CardActions sx={{ px: 2, pb: 1.5 }}>
+                              <Button
+                                type="button"
+                                size="small"
+                                variant="outlined"
+                                onClick={() => handleOpenSavedPoster(poster)}
+                              >
+                                Open Saved Snapshot {poster.campaign_name}
+                              </Button>
+                              <Button
+                                type="button"
+                                size="small"
+                                color="warning"
+                                onClick={() => setArchiveTarget(poster)}
+                              >
+                                Archive {poster.campaign_name}
+                              </Button>
+                            </CardActions>
+                          </Card>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -937,7 +1342,42 @@ export default function AdminPosterStudioPage() {
           </DialogActions>
         </Box>
       </Dialog>
+
+      {/* Archive Poster Draft Confirmation Dialog */}
+      <Dialog
+        open={Boolean(archiveTarget)}
+        onClose={() => !archivingPoster && setArchiveTarget(null)}
+        aria-labelledby="archive-poster-dialog-title"
+      >
+        <DialogTitle id="archive-poster-dialog-title">
+          Archive Poster Draft?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Archiving <strong>{archiveTarget?.campaign_name}</strong> hides it
+            from the active drafts list while keeping its historical snapshot
+            record in the database.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            type="button"
+            onClick={() => setArchiveTarget(null)}
+            disabled={archivingPoster}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="contained"
+            color="warning"
+            onClick={handleConfirmArchivePoster}
+            disabled={archivingPoster}
+          >
+            {archivingPoster ? "Archiving..." : "Confirm Archive"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
-

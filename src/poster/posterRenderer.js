@@ -196,3 +196,87 @@ export function renderPosterToCanvas(canvas, snapshot) {
   return { rendered: true, width, height };
 }
 
+export function buildPosterExportFilename(snapshot = {}) {
+  const rawCampaign =
+    snapshot.campaign?.campaign_name ||
+    snapshot.festival?.name ||
+    "festival-poster";
+  const slug =
+    String(rawCampaign)
+      .toLowerCase()
+      .replace(/[^a-z0-9-_]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 60) || "festival-poster";
+  const width = Number(snapshot.template?.width) || 1080;
+  const height = Number(snapshot.template?.height) || 1080;
+  return `aspen-glow-${slug}-${width}x${height}.png`;
+}
+
+export function exportPosterToPng(canvas, snapshot, { onDownload } = {}) {
+  if (!canvas || !snapshot) {
+    return {
+      ok: false,
+      error: "Poster canvas is not ready for export. Please retry.",
+    };
+  }
+
+  try {
+    const renderResult = renderPosterToCanvas(canvas, snapshot);
+    if (!renderResult.rendered) {
+      return {
+        ok: false,
+        error: "Unable to render poster artwork onto the canvas. Please retry.",
+      };
+    }
+
+    if (typeof canvas.toDataURL !== "function") {
+      return {
+        ok: false,
+        error: "PNG export is not supported in this browser environment.",
+      };
+    }
+
+    const dataUrl = canvas.toDataURL("image/png");
+    if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/png")) {
+      return {
+        ok: false,
+        error: "Unable to generate a valid PNG image. Please retry.",
+      };
+    }
+
+    const filename = buildPosterExportFilename(snapshot);
+
+    if (typeof onDownload === "function") {
+      onDownload({
+        dataUrl,
+        filename,
+        width: renderResult.width,
+        height: renderResult.height,
+      });
+    } else if (typeof document !== "undefined") {
+      const link = document.createElement("a");
+      link.download = filename;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    return {
+      ok: true,
+      filename,
+      dataUrl,
+      width: renderResult.width,
+      height: renderResult.height,
+      error: null,
+    };
+  } catch {
+    return {
+      ok: false,
+      error:
+        "Unable to export poster PNG right now. Verify image permissions and retry.",
+    };
+  }
+}
+

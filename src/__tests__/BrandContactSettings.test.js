@@ -227,6 +227,10 @@ describe("Ticket 2 — Public Website Cutover & Safe Fallback", () => {
 
     renderApp(["/"], client);
 
+    await waitFor(() => {
+      expect(client.from).toHaveBeenCalledWith("brand_settings");
+    });
+
     expect(
       await screen.findByText(
         /Bringing the Salon Experience at DevSai Sports Home/i

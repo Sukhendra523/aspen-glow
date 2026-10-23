@@ -17,14 +17,15 @@
 - [x] **Ticket 4: Package Management CRUD (`/admin/packages`) & Public Catalogue Cutover** *(Completed — 27/27 tests passing)*
 - [x] **Ticket 5: Bundle Management CRUD (`/admin/bundles`)** *(Completed — 32/32 tests passing)*
 - [x] **Ticket 6: Media Library & Safe Asset Upload (`/admin/media`)** *(Completed — 36/36 tests passing)*
-- [x] **Ticket 7: Festival Catalogue & Poster Templates (`/admin/posters`)** *(Implemented — awaiting user test run)*
-  - Created migration `supabase/migrations/20261023000007_festivals_templates_and_posters.sql` (`festivals`, `poster_templates`, and `posters` tables with forced RLS and canonical Indian festival & template seeds).
-  - Created `src/poster/posterTemplates.js`, `src/poster/snapshotResolver.js`, `src/poster/posterRenderer.js`, and `src/services/festivalService.js`.
-  - Built `/admin/posters` (`src/pages/admin/AdminPosterStudioPage.js`) with festival selector, custom festival creation dialog, template/format/theme selectors, package/bundle offering pickers, and live snapshot + `<canvas>` artwork preview.
-  - Wired `/admin/posters` in `src/App.js` and `src/pages/admin/AdminDashboardPage.js`, and added `src/__tests__/PosterTemplates.test.js`.
-- [ ] **Ticket 8: Poster Studio Draft Persistence & PNG Export**
+- [x] **Ticket 7: Festival Catalogue & Poster Templates (`/admin/posters`)** *(Completed — 41/41 tests passing)*
+- [x] **Ticket 8: Poster Studio Draft Persistence & PNG Export (`/admin/posters`)** *(Implemented — awaiting user test run)*
+  - Fixed unmounted/null-client `act(...)` warning in `src/pages/PublicHomePage.js` and `src/__tests__/BrandContactSettings.test.js`.
+  - Added `buildPosterExportFilename` and `exportPosterToPng` in `src/poster/posterRenderer.js`.
+  - Created `src/services/posterService.js` (`fetchAdminPosters`, `savePosterDraft`, `recordPosterExportMetadata`, `archivePosterRecord`).
+  - Updated `src/pages/admin/AdminPosterStudioPage.js` with Save/Update Draft, Reopen Saved Snapshot (`Snapshot Mode: Immutable`), explicit Refresh Snapshot option, PNG Export with retryable error alert, and Archive Poster Draft confirmation.
+  - Added `src/__tests__/PosterPersistenceAndExport.test.js`.
 
 ## Current Checkpoint
-- **Active Ticket:** Ticket 7 (`feat/festival-poster-templates`)
-- **Files Changed:** `supabase/migrations/20261023000007_festivals_templates_and_posters.sql`, `src/poster/posterTemplates.js`, `src/poster/snapshotResolver.js`, `src/poster/posterRenderer.js`, `src/services/festivalService.js`, `src/pages/admin/AdminPosterStudioPage.js`, `src/pages/admin/AdminDashboardPage.js`, `src/App.js`, `src/__tests__/PosterTemplates.test.js`, `docs/WORK_LOG.md`.
-- **Next Action:** User runs `npm test -- --watchAll=false src/__tests__/PosterTemplates.test.js` to verify Ticket 7 tests and approves proceeding to Ticket 8.
+- **Active Ticket:** Ticket 8 (`feat/poster-persistence-and-export`)
+- **Files Changed:** `src/pages/PublicHomePage.js`, `src/poster/posterRenderer.js`, `src/services/posterService.js`, `src/pages/admin/AdminPosterStudioPage.js`, `src/__tests__/BrandContactSettings.test.js`, `src/__tests__/PosterTemplates.test.js`, `src/__tests__/PosterPersistenceAndExport.test.js`, `docs/WORK_LOG.md`.
+- **Next Action:** User runs `npm test -- --watchAll=false` to verify all 8 ticket test suites and `npm run build` for final release verification.

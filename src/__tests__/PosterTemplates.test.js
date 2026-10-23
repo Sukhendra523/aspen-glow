@@ -162,6 +162,11 @@ function createPosterStudioSupabaseClient({ isAdmin = true } = {}) {
           select: jest.fn(() => buildListChain(() => [])),
         };
       }
+      if (table === "posters") {
+        return {
+          select: jest.fn(() => buildListChain(() => [])),
+        };
+      }
       return {};
     }),
   };
