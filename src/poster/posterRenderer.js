@@ -1082,10 +1082,34 @@ function buildPoster4BridalCatalogueGroup(
           lineWidth: 2,
         });
         const cardIcons = ["💄", "👩", "💍", "👰"];
-        ctx.fillStyle = "#f1cf85";
-        ctx.font = "34px 'Lato', sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(cardIcons[idx % cardIcons.length], cx + 62, cy + 80);
+        const renderDefaultCardIcon = () => {
+          let glyph = cardIcons[idx % cardIcons.length];
+          if (card.icon_type === "makeup_brush") glyph = "💄";
+          else if (card.icon_type === "glamour_lady") glyph = "👩";
+          else if (card.icon_type === "diamond_ring") glyph = "💍";
+          else if (card.icon_type === "bride_veil") glyph = "👰";
+          else if (card.icon_type === "mehndi_hand") glyph = "✋";
+
+          ctx.fillStyle = "#f1cf85";
+          ctx.font = "34px 'Lato', sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(glyph, cx + 62, cy + 80);
+        };
+
+        if (card.icon_url) {
+          drawCachedOrFallbackImage(
+            ctx,
+            card.icon_url,
+            cx + 62 - 28,
+            cy + 68 - 28,
+            56,
+            56,
+            requestRedraw,
+            renderDefaultCardIcon
+          );
+        } else {
+          renderDefaultCardIcon();
+        }
 
         // Card Title
         ctx.textAlign = "left";
@@ -1189,10 +1213,27 @@ function buildPoster4BridalCatalogueGroup(
         stroke: "#d4af63",
         lineWidth: 2,
       });
-      ctx.fillStyle = "#f1cf85";
-      ctx.font = "36px 'Lato', sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("✋", leftX + 74, lowerCardY + 86);
+      const renderHaldiDefault = () => {
+        ctx.fillStyle = "#f1cf85";
+        ctx.font = "36px 'Lato', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("✋", leftX + 74, lowerCardY + 86);
+      };
+
+      if (haldi.icon_url) {
+        drawCachedOrFallbackImage(
+          ctx,
+          haldi.icon_url,
+          leftX + 74 - 30,
+          lowerCardY + 74 - 30,
+          60,
+          60,
+          requestRedraw,
+          renderHaldiDefault
+        );
+      } else {
+        renderHaldiDefault();
+      }
 
       ctx.textAlign = "left";
       ctx.fillStyle = "#f1cf85";
@@ -1236,10 +1277,32 @@ function buildPoster4BridalCatalogueGroup(
         stroke: "#d4af63",
         lineWidth: 1.5,
       });
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#f1cf85";
-      ctx.font = "22px 'Lato', sans-serif";
-      ctx.fillText("💇‍♀️", rightX + 48, lowerCardY + 56);
+      const renderHaircutsDefault = () => {
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#f1cf85";
+        ctx.font = "22px 'Lato', sans-serif";
+        ctx.fillText("💇‍♀️", rightX + 48, lowerCardY + 56);
+      };
+
+      const haircutsIconUrl =
+        catSections?.haircuts_icon_url ||
+        catSections?.haircuts?.[0]?.icon_url ||
+        "";
+
+      if (haircutsIconUrl) {
+        drawCachedOrFallbackImage(
+          ctx,
+          haircutsIconUrl,
+          rightX + 48 - 18,
+          lowerCardY + 48 - 18,
+          36,
+          36,
+          requestRedraw,
+          renderHaircutsDefault
+        );
+      } else {
+        renderHaircutsDefault();
+      }
 
       ctx.textAlign = "left";
       ctx.fillStyle = "#f1cf85";
@@ -1292,10 +1355,27 @@ function buildPoster4BridalCatalogueGroup(
         stroke: "#d4af63",
         lineWidth: 1.5,
       });
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#f1cf85";
-      ctx.font = "22px 'Lato', sans-serif";
-      ctx.fillText("🌿", rightX + 48, lowerCardY + 220);
+      const renderMehndiDefault = () => {
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#f1cf85";
+        ctx.font = "22px 'Lato', sans-serif";
+        ctx.fillText("🌿", rightX + 48, lowerCardY + 220);
+      };
+
+      if (mehndi.icon_url) {
+        drawCachedOrFallbackImage(
+          ctx,
+          mehndi.icon_url,
+          rightX + 48 - 18,
+          lowerCardY + 212 - 18,
+          36,
+          36,
+          requestRedraw,
+          renderMehndiDefault
+        );
+      } else {
+        renderMehndiDefault();
+      }
 
       ctx.textAlign = "left";
       ctx.fillStyle = "#f1cf85";

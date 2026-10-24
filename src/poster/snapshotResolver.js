@@ -17,6 +17,8 @@ const DEFAULT_CATALOGUE_SECTIONS = {
       price_inr: 1499,
       price_formatted: "₹1,499",
       icon_type: "makeup_brush",
+      icon_url:
+        "https://njbrajywjucsoaobildv.supabase.co/storage/v1/object/public/salon-media/general/1792814344886-7k0aky-icon.png",
       items: [
         "Includes: Professional Makeup, Elegant Hairstyle & Saree Draping.",
       ],
@@ -218,8 +220,12 @@ function buildCatalogueSectionsFromServices(services = []) {
           name: String(h.name || "").trim(),
           price_inr: Number(h.price_inr) || 0,
           price_formatted: formatInrPrice(Number(h.price_inr) || 0),
+          icon_url: String(h.icon_url || "").trim(),
         }))
       : DEFAULT_CATALOGUE_SECTIONS.haircuts;
+
+  const haircutsIconUrl =
+    hairSvcs.find((h) => h.icon_url)?.icon_url || "";
 
   const mehndi = mehndiSvc
     ? {
@@ -233,6 +239,7 @@ function buildCatalogueSectionsFromServices(services = []) {
           mehndiSvc.price_label || "Starting from just"
         ).trim(),
         price_formatted: formatInrPrice(Number(mehndiSvc.price_inr) || 99),
+        icon_url: String(mehndiSvc.icon_url || "").trim(),
       }
     : DEFAULT_CATALOGUE_SECTIONS.mehndi;
 
@@ -240,6 +247,7 @@ function buildCatalogueSectionsFromServices(services = []) {
     makeupAndBridalCards,
     bridalSpotlight,
     haircuts,
+    haircuts_icon_url: haircutsIconUrl,
     mehndi,
   };
 }

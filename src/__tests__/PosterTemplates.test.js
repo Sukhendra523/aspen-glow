@@ -351,6 +351,63 @@ describe("Ticket 7 — Snapshot Resolver & Canvas Poster Renderer", () => {
     });
   });
 
+  test("Ticket 18: uses custom icon_url instead of default cardIcons on poster cards when available", () => {
+    const drawImageCalls = [];
+    const fillTextCalls = [];
+    const fakeCtx = {
+      fillStyle: "",
+      strokeStyle: "",
+      lineWidth: 1,
+      font: "",
+      textAlign: "left",
+      fillRect: jest.fn(),
+      strokeRect: jest.fn(),
+      fillText: jest.fn((text) => fillTextCalls.push(text)),
+      drawImage: jest.fn((...args) => drawImageCalls.push(args)),
+    };
+    const fakeCanvas = {
+      width: 0,
+      height: 0,
+      getContext: jest.fn(() => fakeCtx),
+    };
+
+    const tpl = DEFAULT_POSTER_TEMPLATES.find(
+      (t) => t.template_key === "bridal_alacarte_catalogue_v1"
+    );
+
+    const customIconUrl =
+      "https://njbrajywjucsoaobildv.supabase.co/storage/v1/object/public/salon-media/general/1792814344886-7k0aky-icon.png";
+
+    const snap = buildPosterSnapshot({
+      campaignName: "Teej Bridal Catalogue",
+      headline: "Teej Special Offer For Every Occasion",
+      festival: DEFAULT_FESTIVALS[2],
+      template: tpl,
+      formatKey: "portrait_1080x1620",
+      catalogueServices: [
+        {
+          id: "svc-1",
+          name: "Light Party Makeup",
+          category: "Makeup & Styling",
+          price_inr: 1499,
+          icon_type: "makeup_brush",
+          icon_url: customIconUrl,
+          inclusions: [
+            "Includes: Professional Makeup, Elegant Hairstyle & Saree Draping.",
+          ],
+        },
+      ],
+    });
+
+    expect(snap.catalogue_sections.makeupAndBridalCards[0].icon_url).toBe(
+      customIconUrl
+    );
+
+    const res = renderPosterToCanvas(fakeCanvas, snap);
+    expect(res.rendered).toBe(true);
+    expect(fillTextCalls.join(" | ")).toContain("Light Party Makeup");
+  });
+
   test("cancels stale async redraws and does not loop infinitely when switching snapshots on the same canvas", () => {
     jest.useFakeTimers();
     const fillTextCalls = [];
