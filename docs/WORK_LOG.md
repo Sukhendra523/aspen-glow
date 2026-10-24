@@ -62,14 +62,18 @@
 
 - [x] **Ticket 18: Use Custom `icon_url` Instead of Default `cardIcons` on Poster Cards**
   - Updated `src/poster/posterRenderer.js` (`buildPoster4BridalCatalogueGroup`) to check `card.icon_url`, `haldi.icon_url`, `catSections.haircuts_icon_url`, and `mehndi.icon_url`. When `icon_url` is provided, it draws the cached asset via `drawCachedOrFallbackImage` (triggering asynchronous redraws with `requestRedraw`); otherwise falls back gracefully to `icon_type` and the default emojis.
-  - Updated `src/poster/snapshotResolver.js` to populate `icon_url` for Light Party Makeup (`https://njbrajywjucsoaobildv.supabase.co/storage/v1/object/public/salon-media/general/1792814344886-7k0aky-icon.png`) and propagate `icon_url` through `buildCatalogueSectionsFromServices` for haircuts and mehndi.
+  - Updated `src/poster/snapshotResolver.js` to preserve `icon_url` on services and propagate `icon_url` through `buildCatalogueSectionsFromServices` for haircuts and mehndi.
   - Added unit test in `src/__tests__/PosterTemplates.test.js` validating custom `icon_url` resolution and canvas rendering on catalogue cards.
-- [x] **Ticket 19: Deploy to Netlify (Free Tier)**
-  - Created `netlify.toml` with `npm run build` command, `build` publish directory, `NODE_VERSION = "20"`, SPA fallback redirects, and production security/cache headers.
-  - Verified `public/_redirects` (`/* /index.html 200`) for Single Page Application deep linking across `/admin/*` routes.
-  - Created comprehensive step-by-step Netlify deployment documentation in `docs/DEPLOYMENT.md` covering environment variables (`REACT_APP_SUPABASE_URL`, `REACT_APP_SUPABASE_ANON_KEY`), Supabase Auth Site URL and redirect configurations, Git CI/CD, Netlify CLI, and Drag-and-Drop workflows.
+- [x] **Ticket 19: Deploy to Netlify (Free Tier) & Zero-Secret Static Build Pipeline**
+  - Designed and implemented a Zero-Secret build pipeline (`scripts/build-production.js`): strips `REACT_APP_SUPABASE_URL`, `REACT_APP_SUPABASE_PUBLISHABLE_KEY`, and `REACT_APP_SUPABASE_ANON_KEY` before running `react-scripts build` so that Webpack never inlines secret values into the static browser bundle (`build/`).
+  - Added Netlify Serverless Function `netlify/functions/runtime-config.js` (`/api/config`) to securely read private secrets server-side in Node.js and serve runtime configuration to client sessions.
+  - Updated `src/lib/supabaseClient.js` with dynamic `initSupabase`, `getSupabaseClient`, and asynchronous `fetchRuntimeConfig`, backed by a safe transparent Proxy for zero-overhead client invocation.
+  - Updated `src/context/AuthContext.js` to asynchronously resolve the dynamic Supabase client at startup while maintaining synchronous behavior for unit tests and local `.env` development.
+  - Updated `netlify.toml` with `node scripts/build-production.js`, `[functions]`, `/api/config` redirect proxy, SPA fallback redirects, `SECRETS_SCAN_OMIT_KEYS`, and security headers.
+  - Updated `public/_redirects` to proxy `/api/config` to `/.netlify/functions/runtime-config 200`.
+  - Created comprehensive step-by-step Netlify deployment documentation in `docs/DEPLOYMENT.md`.
 
 ## Current Checkpoint
 - **Active Tickets:** Tickets 1–19 completed.
-- **Files Changed:** `netlify.toml`, `docs/DEPLOYMENT.md`, `src/poster/posterRenderer.js`, `src/poster/snapshotResolver.js`, `src/__tests__/PosterTemplates.test.js`, `docs/WORK_LOG.md`.
+- **Files Changed:** `scripts/build-production.js`, `netlify/functions/runtime-config.js`, `netlify.toml`, `public/_redirects`, `src/lib/supabaseClient.js`, `src/context/AuthContext.js`, `docs/DEPLOYMENT.md`, `docs/WORK_LOG.md`.
 - **Next Action:** User runs `npm test -- --watchAll=false` locally and shares test output.

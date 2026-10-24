@@ -17,8 +17,7 @@ const DEFAULT_CATALOGUE_SECTIONS = {
       price_inr: 1499,
       price_formatted: "₹1,499",
       icon_type: "makeup_brush",
-      icon_url:
-        "https://njbrajywjucsoaobildv.supabase.co/storage/v1/object/public/salon-media/general/1792814344886-7k0aky-icon.png",
+      icon_url: "",
       items: [
         "Includes: Professional Makeup, Elegant Hairstyle & Saree Draping.",
       ],

@@ -376,7 +376,7 @@ describe("Ticket 7 — Snapshot Resolver & Canvas Poster Renderer", () => {
     );
 
     const customIconUrl =
-      "https://njbrajywjucsoaobildv.supabase.co/storage/v1/object/public/salon-media/general/1792814344886-7k0aky-icon.png";
+      "https://example.com/salon-media/general/test-custom-icon.png";
 
     const snap = buildPosterSnapshot({
       campaignName: "Teej Bridal Catalogue",

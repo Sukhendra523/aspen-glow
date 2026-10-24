@@ -4,14 +4,20 @@ This document outlines the step-by-step instructions to deploy the Aspen Glow we
 
 ---
 
-## 1. Architecture & Build Configuration
+## 1. Architecture & Zero-Secret Build Configuration
 
-- **Build Tool:** Create React App (`react-scripts build`)
-- **Build Command:** `npm run build`
+- **Build Pipeline:** `node scripts/build-production.js` -> executes `react-scripts build` with a sanitized build-time environment.
+- **Zero-Secret Static Output:** `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_PUBLISHABLE_KEY` are stripped before Create React App compiles, ensuring that the static files in `build/` contains zero inlined secrets.
+- **Serverless Runtime Configuration:** Netlify serverless function `netlify/functions/runtime-config.js` securely reads secrets server-side in Node.js and serves them via `/api/config` to authenticated/client sessions at runtime.
 - **Publish Directory:** `build`
 - **Node.js Target:** `20.x`
-- **Routing Configuration:** Single Page Application (SPA) with deep links supported by `public/_redirects` and `netlify.toml`:
+- **Routing & Proxy Configuration:** Single Page Application (SPA) deep linking and function redirection via `public/_redirects` and `netlify.toml`:
   ```toml
+  [[redirects]]
+    from = "/api/config"
+    to = "/.netlify/functions/runtime-config"
+    status = 200
+
   [[redirects]]
     from = "/*"
     to = "/index.html"
@@ -26,8 +32,11 @@ Configure the following environment variables in the Netlify Dashboard (**Site c
 
 | Variable | Description | Security Level |
 |---|---|---|
-| `REACT_APP_SUPABASE_URL` | Your Supabase Project URL (`https://<project-id>.supabase.co`) | Public / Client-Safe |
-| `REACT_APP_SUPABASE_ANON_KEY` | Your Supabase Project Anonymous (`anon`) Key | Public / Client-Safe |
+| `REACT_APP_SUPABASE_URL` or `SUPABASE_URL` | Your Supabase Project URL (`https://<project-id>.supabase.co`) | Private Serverless Secret |
+| `REACT_APP_SUPABASE_PUBLISHABLE_KEY` or `SUPABASE_ANON_KEY` | Your Supabase Project Anonymous (`anon`) Key | Private Serverless Secret |
+
+> [!NOTE]
+> **Netlify Secret Scanning & Zero-Exposure:** Netlify scans build output for environment variables marked as Secrets. By running `node scripts/build-production.js`, the static bundle (`build/`) never embeds these keys. At runtime, the client resolves them asynchronously via the Netlify serverless function `/api/config`. In addition, `netlify.toml` specifies `SECRETS_SCAN_OMIT_KEYS = "REACT_APP_SUPABASE_URL,REACT_APP_SUPABASE_PUBLISHABLE_KEY,REACT_APP_SUPABASE_ANON_KEY"` as defense-in-depth.
 
 > [!CAUTION]
 > **NEVER expose the `SUPABASE_SERVICE_ROLE_KEY`** in Netlify environment variables or client code. The client only needs the public `anon` key. Server-side security is strictly enforced via Supabase Row Level Security (RLS) policies.

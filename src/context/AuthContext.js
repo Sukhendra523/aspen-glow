@@ -6,7 +6,12 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { supabase, isSupabaseConfigured } from "../lib/supabaseClient";
+import {
+  supabase,
+  isSupabaseConfigured,
+  getSupabaseClient,
+  fetchRuntimeConfig,
+} from "../lib/supabaseClient";
 import {
   getInitialAuthState,
   fetchAdminProfile,
@@ -18,23 +23,60 @@ import {
 
 const AuthContext = createContext(null);
 
-export function AuthProvider({ children, client = supabase }) {
-  const configured = Boolean(client) || isSupabaseConfigured();
+export function AuthProvider({ children, client: propClient }) {
+  const [activeClient, setActiveClient] = useState(
+    propClient !== undefined
+      ? propClient
+      : getSupabaseClient() || (isSupabaseConfigured() ? supabase : null)
+  );
+  const [configChecked, setConfigChecked] = useState(
+    propClient !== undefined || Boolean(getSupabaseClient())
+  );
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(Boolean(client));
+  const [loading, setLoading] = useState(true);
   const [recoveryMode, setRecoveryMode] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
+    if (propClient !== undefined) {
+      setActiveClient(propClient);
+      setConfigChecked(true);
+      return undefined;
+    }
+    const current = getSupabaseClient();
+    if (current) {
+      setActiveClient(current);
+      setConfigChecked(true);
+      return undefined;
+    }
+    fetchRuntimeConfig().then((loaded) => {
+      if (!isMounted) return;
+      if (loaded) {
+        setActiveClient(loaded);
+      }
+      setConfigChecked(true);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [propClient]);
 
-    if (!client) {
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!configChecked) {
+      return undefined;
+    }
+
+    if (!activeClient) {
       setLoading(false);
       return undefined;
     }
 
-    getInitialAuthState(client).then((result) => {
+    setLoading(true);
+    getInitialAuthState(activeClient).then((result) => {
       if (!isMounted) return;
       setSession(result.session);
       setProfile(result.profile);
@@ -42,54 +84,54 @@ export function AuthProvider({ children, client = supabase }) {
       setLoading(false);
     });
 
-    const { data: subscriptionData } = client.auth.onAuthStateChange(
-      async (event, nextSession) => {
-        if (!isMounted) return;
+    const subscriptionData = activeClient.auth?.onAuthStateChange
+      ? activeClient.auth.onAuthStateChange(async (event, nextSession) => {
+          if (!isMounted) return;
 
-        if (event === "PASSWORD_RECOVERY") {
-          setRecoveryMode(true);
-          setSession(nextSession);
+          if (event === "PASSWORD_RECOVERY") {
+            setRecoveryMode(true);
+            setSession(nextSession);
+            setLoading(false);
+            return;
+          }
+
+          if (!nextSession?.user) {
+            setSession(null);
+            setProfile(null);
+            setIsAdmin(false);
+            setRecoveryMode(false);
+            setLoading(false);
+            return;
+          }
+
+          const profileResult = await fetchAdminProfile(
+            nextSession.user.id,
+            activeClient
+          );
+          if (!isMounted) return;
+
+          if (profileResult.isAdmin) {
+            setSession(nextSession);
+            setProfile(profileResult.profile);
+            setIsAdmin(true);
+          } else {
+            setSession(null);
+            setProfile(null);
+            setIsAdmin(false);
+          }
           setLoading(false);
-          return;
-        }
-
-        if (!nextSession?.user) {
-          setSession(null);
-          setProfile(null);
-          setIsAdmin(false);
-          setRecoveryMode(false);
-          setLoading(false);
-          return;
-        }
-
-        const profileResult = await fetchAdminProfile(
-          nextSession.user.id,
-          client
-        );
-        if (!isMounted) return;
-
-        if (profileResult.isAdmin) {
-          setSession(nextSession);
-          setProfile(profileResult.profile);
-          setIsAdmin(true);
-        } else {
-          setSession(null);
-          setProfile(null);
-          setIsAdmin(false);
-        }
-        setLoading(false);
-      }
-    );
+        })
+      : null;
 
     return () => {
       isMounted = false;
-      subscriptionData?.subscription?.unsubscribe?.();
+      subscriptionData?.data?.subscription?.unsubscribe?.();
     };
-  }, [client]);
+  }, [activeClient, configChecked]);
 
   const login = useCallback(
     async ({ email, password }) => {
-      const result = await signInAdmin({ email, password }, client);
+      const result = await signInAdmin({ email, password }, activeClient);
       if (result.isAdmin) {
         setSession(result.session);
         setProfile(result.profile);
@@ -101,38 +143,38 @@ export function AuthProvider({ children, client = supabase }) {
       }
       return result;
     },
-    [client]
+    [activeClient]
   );
 
   const logout = useCallback(async () => {
-    const result = await signOutAdmin(client);
+    const result = await signOutAdmin(activeClient);
     setSession(null);
     setProfile(null);
     setIsAdmin(false);
     setRecoveryMode(false);
     return result;
-  }, [client]);
+  }, [activeClient]);
 
   const sendPasswordReset = useCallback(
-    async (email) => requestAdminPasswordReset(email, client),
-    [client]
+    async (email) => requestAdminPasswordReset(email, activeClient),
+    [activeClient]
   );
 
   const changePassword = useCallback(
     async (newPassword) => {
-      const result = await updateAdminPassword(newPassword, client);
+      const result = await updateAdminPassword(newPassword, activeClient);
       if (result.ok) {
         setRecoveryMode(false);
       }
       return result;
     },
-    [client]
+    [activeClient]
   );
 
   const value = useMemo(
     () => ({
-      client,
-      configured,
+      client: activeClient,
+      configured: Boolean(activeClient) || isSupabaseConfigured(),
       session,
       user: session?.user || null,
       profile,
@@ -145,8 +187,7 @@ export function AuthProvider({ children, client = supabase }) {
       changePassword,
     }),
     [
-      client,
-      configured,
+      activeClient,
       session,
       profile,
       isAdmin,
