@@ -264,7 +264,7 @@ const Services = ({
         )}
 
         <Grid container spacing={4} justifyContent="center">
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ height: "290px"}}>
             <Typography
               variant="h3"
               textAlign="center"
@@ -279,6 +279,7 @@ const Services = ({
             <Card
               sx={{
                 p: 2,
+                height:"100%",
                 borderTop: "4px solid",
                 borderColor: "primary.light",
               }}
@@ -300,7 +301,7 @@ const Services = ({
               </List>
             </Card>
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ height : '290px'}}>
             <Typography
               variant="h3"
               textAlign="center"
@@ -310,11 +311,11 @@ const Services = ({
                 fontWeight: 600,
               }}
             >
-              ꧁🌸🌷🪷 Mehndi Artistry 🪷🌷🌸꧂
+              ꧁🌸 Mehndi Artistry 🪷꧂
             </Typography>
             <Card
               sx={{
-                p: 3,
+                p:2,
                 height: "100%",
                 display: "flex",
                 alignItems: "center",

@@ -163,6 +163,7 @@ export default function AdminFestivalsPage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (saving) return;
     setFormError("");
     setSuccessMessage("");
     setFieldErrors({});
@@ -189,7 +190,13 @@ export default function AdminFestivalsPage() {
       setForm(updatedForm);
       setSuccessMessage(`Updated festival "${saved.name}".`);
     } else {
-      setFestivals((prev) => [...prev, saved]);
+      setFestivals((prev) => {
+        const exists = prev.some((item) => item.id === saved.id);
+        if (exists) {
+          return prev.map((item) => (item.id === saved.id ? saved : item));
+        }
+        return [...prev, saved];
+      });
       resetToCreateMode();
       setSuccessMessage(`Created festival "${saved.name}".`);
     }

@@ -505,7 +505,9 @@ describe("Ticket 7 — Admin Poster Studio UI (/admin/posters)", () => {
       await screen.findByText(/Cleared all Poster Configuration form inputs/i)
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/Campaign Name/i)).toHaveValue("");
-    expect(screen.getByLabelText(/Poster Headline/i)).toHaveValue("");
+    // Target the headline text input by id: the label "Poster Headline" also
+    // matches the toolbar toggle button and the color picker aria-labels.
+    expect(document.getElementById("poster-headline")).toHaveValue("");
 
     // Reset Form restores default festival, headline, and packages
     await userEvent.click(screen.getByRole("button", { name: /Reset Form/i }));
@@ -514,7 +516,7 @@ describe("Ticket 7 — Admin Poster Studio UI (/admin/posters)", () => {
         /Reset Poster Configuration form to default values/i
       )
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/Poster Headline/i)).toHaveValue(
+    expect(document.getElementById("poster-headline")).toHaveValue(
       "Karwa Chauth Special Glow Packages"
     );
 

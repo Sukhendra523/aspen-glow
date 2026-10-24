@@ -16,7 +16,7 @@ const SAFE_ARCHIVE_ERROR =
   "Unable to archive the service right now. Please try again.";
 
 const SERVICE_COLUMNS =
-  "id, name, category, description, inclusions, price_inr, price_label, icon_name, display_order, status, created_at, updated_at";
+  "id, name, category, description, icon_url, inclusions, price_inr, price_label, icon_name, display_order, status, created_at, updated_at";
 
 export function validateServiceInput(input = {}) {
   const errors = {};

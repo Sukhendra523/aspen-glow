@@ -52,9 +52,36 @@
   - Created `src/components/admin/MediaLibraryIconPicker.js` and integrated it into `src/pages/admin/AdminServicesPage.js`, `src/pages/admin/AdminPackagesPage.js`, and `src/pages/admin/AdminBundlesPage.js` so the owner can choose an icon from the Media Library (or paste an icon URL) alongside built-in Material UI icons.
   - Updated `src/components/Services.js`, `src/poster/snapshotResolver.js`, and `src/poster/posterRenderer.js` to render custom `icon_url` images when configured.
 - [x] **Ticket 16 (Task 5): Poster Configuration Reset & Clear Buttons (`/admin/posters`)**
-  - Added **Reset to Default** and **Clear All** buttons in the Poster Configuration form header of `src/pages/admin/AdminPosterStudioPage.js` and tested them in `src/__tests__/PosterTemplates.test.js`.
+  - Added **Reset Form** and **Clear Form** buttons in the Poster Configuration form header of `src/pages/admin/AdminPosterStudioPage.js` and tested them in `src/__tests__/PosterTemplates.test.js`.
+- [x] **Ticket 17: Rich Text Toolbar Bug Fix, Preview Card PNG Export & Native Color Pickers**
+  - Fixed the Rich Text toolbar not changing anything: `RichTextCampaignField` now calls `onStyleChange(nextStyle, fieldKey)`, and every field in `AdminPosterStudioPage.js` passes its `fieldKey`. Text styles now apply to the canvas poster (including the circular badge and validity note), the preview card, and the input itself.
+  - Added an **Export Preview Card PNG** button for the Accessible Luxury Snapshot Preview Card (`renderSnapshotPreviewCardToCanvas` / `exportSnapshotPreviewCardToPng` in `src/poster/posterRenderer.js`).
+  - Switched color inputs to the native HTML `type="color"` picker in `AdminSettingsPage.js` (primary/secondary/background), `AdminFestivalsPage.js` (accent), `AdminPackagesPage.js` (poster card color), and the Add Custom Festival dialog in `AdminPosterStudioPage.js`. The Rich Text toolbar keeps its original color picker and luxury swatches, as requested.
+  - Fixed duplicate key warning (`Encountered two children with the same key, '.$fest-new-1'`): added submit debouncing / saving check and ID-based state deduplication in `AdminFestivalsPage.js` (`handleSubmit`), and updated `insertMock` in `src/__tests__/FestivalManagement.test.js` to increment sequential IDs and deduplicate list entries.
+  - Test fixes: corrected labels in `FestivalManagement.test.js`, added `jest.setTimeout(30000)` to the heavy UI suites, and the Poster Headline input is now found by id, because its label text also matches the toolbar button and color picker aria-labels.
+
+## Future / Pending Tickets (Not Started)
+- [ ] **Ticket 18: Use Custom `icon_url` Instead of Default `cardIcons` on Poster Cards**
+  - **Problem:** Poster 4 (`bridal_alacarte_catalogue_v1`) makeup cards always draw the hardcoded emoji array `cardIcons = ["💄", "👩", "💍", "👰"]` (`src/poster/posterRenderer.js`, inside `buildPoster4BridalCatalogueGroup`), even when the offering already has an `icon_url`.
+  - **Example offering snapshot:**
+    ```json
+    {
+      "name": "Light Party Makeup",
+      "price_inr": 1499,
+      "price_formatted": "₹1,499",
+      "icon_type": "makeup_brush",
+      "icon_url": "https://njbrajywjucsoaobildv.supabase.co/storage/v1/object/public/salon-media/general/1792814344886-7k0aky-icon.png",
+      "items": [
+        "Includes: Professional Makeup, Elegant Hairstyle & Saree Draping."
+      ]
+    }
+    ```
+  - **Acceptance criteria:** When `icon_url` is set, draw it inside the circular medallion with `drawCachedOrFallbackImage` (async redraw via `requestRedraw`); otherwise fall back to the `icon_type` glyph and then the default `cardIcons` emoji. Check every other template and catalogue section (haircuts, mehndi, cleanup list rows) for the same hardcoded-icon pattern. Add a renderer test that checks `drawImage` is called when `icon_url` is present.
+- [ ] **Ticket 19: Deploy to Netlify (Free Tier)**
+  - **Acceptance criteria:** Netlify site is connected to the repository with build command `npm run build` and publish directory `build`. `public/_redirects` (`/* /index.html 200`) supports `BrowserRouter` deep links. `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_ANON_KEY` are set in Netlify environment variables only (never the service-role key). Supabase Auth Site URL / redirect URLs include the Netlify domain. Public sign-up stays disabled. All migrations through `20261024000009_custom_icons_and_festivals.sql` are applied to the production project.
+  - **Requires explicit owner approval before execution:** Netlify account/site creation, domain choice (`aspen-glow.netlify.app`), and production deploy (AGENTS.md guardrail #10).
 
 ## Current Checkpoint
-- **Active Tickets:** Tickets 12–16 (`feat/rich-text-festivals-qr-media-icons-reset`)
-- **Files Changed:** `supabase/migrations/20261024000009_custom_icons_and_festivals.sql`, `src/components/admin/RichTextCampaignField.js`, `src/components/admin/MediaLibraryIconPicker.js`, `src/pages/admin/AdminFestivalsPage.js`, `src/services/festivalService.js`, `src/services/mediaService.js`, `src/constants/serviceCatalogue.js`, `src/services/serviceCatalogueService.js`, `src/services/packageService.js`, `src/services/bundleService.js`, `src/pages/admin/AdminServicesPage.js`, `src/pages/admin/AdminPackagesPage.js`, `src/pages/admin/AdminBundlesPage.js`, `src/pages/admin/AdminDashboardPage.js`, `src/pages/admin/AdminPosterStudioPage.js`, `src/App.js`, `src/components/Contact.js`, `src/components/Services.js`, `src/poster/fabricPosterEngine.js`, `src/poster/posterRenderer.js`, `src/poster/snapshotResolver.js`, `src/__tests__/FestivalManagement.test.js`, `src/__tests__/PosterTemplates.test.js`, `docs/WORK_LOG.md`.
+- **Active Tickets:** Tickets 12–17 complete pending the user's test run; Tickets 18–19 are queued (not started).
+- **Files Changed:** `supabase/migrations/20261024000009_custom_icons_and_festivals.sql`, `src/components/admin/RichTextCampaignField.js`, `src/components/admin/MediaLibraryIconPicker.js`, `src/pages/admin/AdminFestivalsPage.js`, `src/services/festivalService.js`, `src/services/mediaService.js`, `src/constants/serviceCatalogue.js`, `src/services/serviceCatalogueService.js`, `src/services/packageService.js`, `src/services/bundleService.js`, `src/pages/admin/AdminServicesPage.js`, `src/pages/admin/AdminPackagesPage.js`, `src/pages/admin/AdminBundlesPage.js`, `src/pages/admin/AdminSettingsPage.js`, `src/pages/admin/AdminDashboardPage.js`, `src/pages/admin/AdminPosterStudioPage.js`, `src/App.js`, `src/components/Contact.js`, `src/components/Services.js`, `src/poster/fabricPosterEngine.js`, `src/poster/posterRenderer.js`, `src/poster/snapshotResolver.js`, `src/__tests__/FestivalManagement.test.js`, `src/__tests__/PosterTemplates.test.js`, `docs/WORK_LOG.md`.
 - **Next Action:** User runs `npm test -- --watchAll=false` locally and shares test output.

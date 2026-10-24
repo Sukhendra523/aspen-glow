@@ -18,11 +18,16 @@ function createFestivalSupabaseClient({ isAdmin = true } = {}) {
     status: "active",
   }));
 
+  let newFestCounter = 0;
   const insertMock = jest.fn((payload) => ({
     select: jest.fn(() => ({
       single: jest.fn().mockImplementation(async () => {
-        const created = { id: "fest-new-1", ...payload };
-        currentFestivals.push(created);
+        newFestCounter += 1;
+        const created = { id: `fest-new-${newFestCounter}`, ...payload };
+        currentFestivals = [
+          ...currentFestivals.filter((f) => f.id !== created.id),
+          created,
+        ];
         return { data: created, error: null };
       }),
     })),
