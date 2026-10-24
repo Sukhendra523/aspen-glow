@@ -1,4 +1,4 @@
-# Aspen Glow by Shilpi — Salon Website & Owner-Operated CMS
+# Aspen Glow — Salon Website & Owner-Operated CMS
 
 [![React 19](https://img.shields.io/badge/React-19.1.0-61dafb.svg?logo=react&logoColor=white)](https://react.dev/)
 [![Material UI v7](https://img.shields.io/badge/Material--UI-7.2.0-007fff.svg?logo=mui&logoColor=white)](https://mui.com/)
@@ -6,9 +6,9 @@
 [![Netlify Deploy](https://img.shields.io/badge/Deploy-Netlify-00c7b7.svg?logo=netlify&logoColor=white)](https://www.netlify.com/)
 [![Tests Passing](https://img.shields.io/badge/Tests-50%20passed%20(9%20suites)-success.svg)](https://jestjs.io/)
 
-A modern, responsive salon website and owner-operated Content Management System (CMS) built for **Aspen Glow by Shilpi** (Greater Noida, India).
+A modern, responsive salon website and owner-operated Content Management System (CMS) built for **Aspen Glow**.
 
-The application allows salon owner Shilpi to autonomously manage beauty services, packages, promotional bundles, brand styling, contact info, media assets, festival occasions, and generate pixel-perfect, print-ready festival promotional posters via a luxury browser-side canvas engine—all without touching source code.
+The application allows salon owner to autonomously manage beauty services, packages, promotional bundles, brand styling, contact info, media assets, festival occasions, and generate pixel-perfect, print-ready festival promotional posters via a luxury browser-side canvas engine—all without touching source code.
 
 ---
 
@@ -157,11 +157,11 @@ To apply these migrations to your Supabase project:
    - `20261024000008_merge_poster_catalogue_data.sql`: Merged catalogue services (Cleanup packages, HD Bridal, etc.).
    - `20261024000009_custom_icons_and_festivals.sql`: Adds `festivals` table and `icon_url` columns to services/packages/bundles.
 3. **Provision the Administrator Profile:**
-   - Under **Authentication > Users**, invite or create the administrator email (e.g. `shilpi@aspenglow.in`).
+   - Under **Authentication > Users**, invite or create the administrator email (e.g. `name@aspenglow.in`).
    - In the SQL Editor, insert the corresponding record in `public.profiles`:
      ```sql
      INSERT INTO public.profiles (id, email, display_name, role, status)
-     VALUES ('<auth-user-id>', 'shilpi@aspenglow.in', 'Shilpi Chauhan', 'admin', 'active')
+     VALUES ('<auth-user-id>', 'name@aspenglow.in', 'your name', 'admin', 'active')
      ON CONFLICT (id) DO UPDATE SET role = 'admin', status = 'active';
      ```
 
@@ -282,4 +282,4 @@ For deep dives into architecture and development guidelines, consult the documen
 
 ## License
 
-Private and proprietary. Created for **Aspen Glow by Shilpi**. All rights reserved.
+Private and proprietary. Created for **Aspen Glow**. All rights reserved.
