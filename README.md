@@ -8,7 +8,7 @@
 
 A modern, responsive salon website and owner-operated Content Management System (CMS) built for **Aspen Glow**.
 
-The application allows salon owner to autonomously manage beauty services, packages, promotional bundles, brand styling, contact info, media assets, festival occasions, and generate pixel-perfect, print-ready festival promotional posters via a luxury browser-side canvas engine—all without touching source code.
+The application allows salon owner to autonomously manage beauty services, packages, promotional bundles, brand styling, contact info, media assets, festival occasions, and generate pixel-perfect, print-ready festival promotional posters via a **luxury browser-side canvas** engine—all (**Poster Studio**) without touching source code.
 
 ---
 
