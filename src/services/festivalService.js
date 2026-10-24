@@ -9,6 +9,26 @@ const SAFE_CONFIG_ERROR =
   "Backend configuration is missing. Set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY.";
 const SAFE_SAVE_ERROR =
   "Unable to save the festival right now. Please check for duplicate names or permission issues.";
+const SAFE_ARCHIVE_ERROR =
+  "Unable to update festival status right now. Please try again.";
+
+export const FESTIVAL_CATEGORIES = [
+  "Indian Festival",
+  "Bridal & Occasion",
+  "Seasonal & Special",
+  "Custom Campaign",
+];
+
+export const EMPTY_FESTIVAL_FORM = {
+  name: "",
+  category: "Indian Festival",
+  default_headline: "",
+  default_subheadline: "",
+  motif_label: "✨",
+  accent_color: "#c2185b",
+  display_order: "10",
+  active: true,
+};
 
 const FESTIVAL_COLUMNS =
   "id, name, category, default_headline, default_subheadline, motif_label, accent_color, active, display_order, created_at, updated_at";
@@ -118,6 +138,100 @@ export async function createFestivalRecord(input, client = supabase) {
     return { data, fieldErrors: {}, error: null };
   } catch {
     return { data: null, fieldErrors: {}, error: SAFE_SAVE_ERROR };
+  }
+}
+
+export async function updateFestivalRecord(id, input, client = supabase) {
+  if (!id) {
+    return {
+      data: null,
+      fieldErrors: {},
+      error: "Festival ID is required for update.",
+    };
+  }
+
+  const validation = validateFestivalInput(input);
+  if (!validation.valid) {
+    return {
+      data: null,
+      fieldErrors: validation.errors,
+      error: "Please fix the highlighted festival fields.",
+    };
+  }
+
+  if (!client) {
+    return { data: null, fieldErrors: {}, error: SAFE_CONFIG_ERROR };
+  }
+
+  try {
+    const { data, error } = await client
+      .from("festivals")
+      .update(validation.cleaned)
+      .eq("id", id)
+      .select(FESTIVAL_COLUMNS)
+      .single();
+
+    if (error || !data) {
+      return { data: null, fieldErrors: {}, error: SAFE_SAVE_ERROR };
+    }
+
+    return { data, fieldErrors: {}, error: null };
+  } catch {
+    return { data: null, fieldErrors: {}, error: SAFE_SAVE_ERROR };
+  }
+}
+
+export async function archiveFestivalRecord(id, client = supabase) {
+  if (!id) {
+    return { data: null, error: "Festival ID is required to archive." };
+  }
+
+  if (!client) {
+    return { data: null, error: SAFE_CONFIG_ERROR };
+  }
+
+  try {
+    const { data, error } = await client
+      .from("festivals")
+      .update({ active: false })
+      .eq("id", id)
+      .select(FESTIVAL_COLUMNS)
+      .single();
+
+    if (error || !data) {
+      return { data: null, error: SAFE_ARCHIVE_ERROR };
+    }
+
+    return { data, error: null };
+  } catch {
+    return { data: null, error: SAFE_ARCHIVE_ERROR };
+  }
+}
+
+export async function restoreFestivalRecord(id, client = supabase) {
+  if (!id) {
+    return { data: null, error: "Festival ID is required to activate." };
+  }
+
+  if (!client) {
+    return { data: null, error: SAFE_CONFIG_ERROR };
+  }
+
+  try {
+    const { data, error } = await client
+      .from("festivals")
+      .update({ active: true })
+      .eq("id", id)
+      .select(FESTIVAL_COLUMNS)
+      .single();
+
+    if (error || !data) {
+      return { data: null, error: SAFE_ARCHIVE_ERROR };
+    }
+
+    return { data, error: null };
+  } catch {
+    return { data: null, error: SAFE_ARCHIVE_ERROR };
   }
 }
 

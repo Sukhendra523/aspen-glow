@@ -10,6 +10,7 @@ import {
   drawCircle,
   drawCircularStampBadge,
   drawDottedLine,
+  drawFittedText,
   drawLuxuryBackground,
   drawNotchedRibbon,
   drawOrnateCardFrame,
@@ -106,15 +107,33 @@ function buildPoster1Royal4ColGroup(snapshot, width, height, requestRedraw) {
       ctx.font = "bold 17px 'Playfair Display', Georgia, serif";
       ctx.fillText("◆  PROFESSIONAL BEAUTY SERVICES  ◆", centerX, 158);
 
-      // Main Festival Script Title
+      // Main Festival Script Title (auto-fitted to prevent overflow)
+      const textStyles = campaign?.text_styles || {};
       const rawHeadline = campaign?.headline || `${festName} Special Offer`;
-      ctx.fillStyle = "#e05368";
-      ctx.font = "italic bold 68px 'Playfair Display', Georgia, serif";
-      ctx.fillText(`🌿 ${festName} 🌿`, centerX, Math.round(232 * scaleY));
+      drawFittedText(ctx, festName, centerX, Math.round(232 * scaleY), {
+        maxWidth: 520,
+        defaultSize: 64,
+        minSize: 26,
+        defaultFamily: "Playfair Display",
+        defaultWeight: "bold",
+        defaultStyle: "italic",
+        defaultColor: "#e05368",
+        prefix: "🌿 ",
+        suffix: " 🌿",
+      });
 
-      ctx.fillStyle = "#e6b865";
-      ctx.font = "italic bold 46px 'Playfair Display', Georgia, serif";
-      ctx.fillText(`♥  ${rawHeadline}  ♥`, centerX, Math.round(292 * scaleY));
+      drawFittedText(ctx, rawHeadline, centerX, Math.round(292 * scaleY), {
+        maxWidth: 540,
+        defaultSize: 44,
+        minSize: 18,
+        defaultFamily: "Playfair Display",
+        defaultWeight: "bold",
+        defaultStyle: "italic",
+        defaultColor: "#e6b865",
+        prefix: "♥  ",
+        suffix: "  ♥",
+        styleOverride: textStyles.headline,
+      });
 
       // Gold Notched Ribbon Banner
       drawNotchedRibbon(
@@ -128,6 +147,7 @@ function buildPoster1Royal4ColGroup(snapshot, width, height, requestRedraw) {
           text:
             campaign?.subheadline || `Unveil your radiant glow for ${festName}`,
           font: "italic bold 23px 'Playfair Display', Georgia, serif",
+          styleOverride: textStyles.subheadline,
         }
       );
 
@@ -135,17 +155,26 @@ function buildPoster1Royal4ColGroup(snapshot, width, height, requestRedraw) {
       const secSub =
         campaign?.secondary_subheadline ||
         "Celebrate the bond of love with Self-Care & Confidence";
-      ctx.fillStyle = "#f5ebe6";
-      ctx.font = "23px 'Playfair Display', Georgia, serif";
-      ctx.fillText(
+      drawFittedText(
+        ctx,
         secSub.includes("Self-Care")
           ? "Celebrate the bond of love with"
           : secSub,
         centerX,
-        Math.round(410 * scaleY)
+        Math.round(410 * scaleY),
+        {
+          maxWidth: 540,
+          defaultSize: 23,
+          minSize: 14,
+          defaultFamily: "Playfair Display",
+          defaultWeight: "normal",
+          defaultColor: "#f5ebe6",
+          styleOverride: textStyles.secondarySubheadline,
+        }
       );
       ctx.fillStyle = "#e05368";
       ctx.font = "italic bold 25px 'Playfair Display', Georgia, serif";
+      ctx.textAlign = "center";
       ctx.fillText(
         "♥  Self-Care & Confidence  ♥",
         centerX,
@@ -158,7 +187,8 @@ function buildPoster1Royal4ColGroup(snapshot, width, height, requestRedraw) {
         942,
         Math.round(325 * scaleY),
         92,
-        campaign?.badge_text || "GLOW\nINSIDE & OUT\nBECAUSE\nYOU DESERVE IT!"
+        campaign?.badge_text || "GLOW\nINSIDE & OUT\nBECAUSE\nYOU DESERVE IT!",
+        textStyles.badgeText
       );
 
       // Section Header Box ("MULTI SERVICE PACKAGES")
@@ -168,21 +198,41 @@ function buildPoster1Royal4ColGroup(snapshot, width, height, requestRedraw) {
         stroke: "#d4af63",
         lineWidth: 2,
       });
-      ctx.fillStyle = "#f1cf85";
-      ctx.font = "bold 30px 'Playfair Display', Georgia, serif";
-      ctx.textAlign = "center";
-      ctx.fillText(
-        `❈  ${campaign?.section_title || "MULTI SERVICE PACKAGES"}  ❈`,
+      drawFittedText(
+        ctx,
+        campaign?.section_title || "MULTI SERVICE PACKAGES",
         600,
-        secBoxY + 37
+        secBoxY + 37,
+        {
+          maxWidth: 630,
+          defaultSize: 30,
+          minSize: 16,
+          defaultFamily: "Playfair Display",
+          defaultWeight: "bold",
+          defaultColor: "#f1cf85",
+          prefix: "❈  ",
+          suffix: "  ❈",
+          styleOverride: textStyles.sectionTitle,
+        }
       );
 
-      ctx.fillStyle = "#ebd5c8";
-      ctx.font = "italic 20px 'Playfair Display', Georgia, serif";
-      ctx.fillText(
-        `—  ${campaign?.section_subtitle || `Pamper Yourself This ${festName}`}  —`,
+      drawFittedText(
+        ctx,
+        campaign?.section_subtitle || `Pamper Yourself This ${festName}`,
         600,
-        secBoxY + 76
+        secBoxY + 76,
+        {
+          maxWidth: 620,
+          defaultSize: 20,
+          minSize: 13,
+          defaultFamily: "Playfair Display",
+          defaultWeight: "normal",
+          defaultStyle: "italic",
+          defaultColor: "#ebd5c8",
+          prefix: "—  ",
+          suffix: "  —",
+          styleOverride: textStyles.sectionSubtitle,
+        }
       );
 
       // 3. 4 Tall Ornate Package Columns
@@ -287,7 +337,15 @@ function buildPoster1Royal4ColGroup(snapshot, width, height, requestRedraw) {
 
         // Bottom Medallion Emblem & Tagline
         const medallionY = colsTop + colsHeight - 108;
-        drawCardMedallion(ctx, colCenter, medallionY, 44, idx);
+        drawCardMedallion(
+          ctx,
+          colCenter,
+          medallionY,
+          44,
+          idx,
+          item.icon_url,
+          requestRedraw
+        );
 
         const rawTagline =
           item.tagline || "SAVE MORE | LOOK BEAUTIFUL";
@@ -316,7 +374,13 @@ function buildPoster1Royal4ColGroup(snapshot, width, height, requestRedraw) {
         footerTagline:
           campaign?.footer_tagline ||
           `THIS ${festName.toUpperCase()}, GIFT YOUR SISTER THE GLOW SHE DESERVES.`,
+        validityNote: campaign?.validity_note || "",
         showQrCode: Boolean(campaign?.show_qr_code),
+        qrCodeUrl: campaign?.qr_code_url,
+        onAsyncLoad: requestRedraw,
+        ctaStyle: textStyles.ctaText,
+        footerTaglineStyle: textStyles.footerTagline,
+        validityStyle: textStyles.validityNote,
       });
     }),
   ]);
@@ -345,27 +409,45 @@ function buildPoster2CleanupListGroup(snapshot, width, height, requestRedraw) {
       ctx.textAlign = "center";
       ctx.fillText(brand?.brand_name || "Aspen Glow by Shilpi", 160, 286);
 
-      // 2. Top-Right Title & Ribbon
-      const headerCenterX = 650;
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#fff8f2";
-      ctx.font = "italic bold 86px 'Playfair Display', Georgia, serif";
-      ctx.fillText(festName, headerCenterX, 108);
+      // 2. Top-Right Title & Ribbon (auto-fitted within x=290..1030)
+      const textStyles = campaign?.text_styles || {};
+      const headerCenterX = 660;
+      drawFittedText(ctx, festName, headerCenterX, 108, {
+        maxWidth: 680,
+        defaultSize: 80,
+        minSize: 32,
+        defaultFamily: "Playfair Display",
+        defaultWeight: "bold",
+        defaultStyle: "italic",
+        defaultColor: "#fff8f2",
+      });
 
-      ctx.fillStyle = "#e8b664";
-      ctx.font = "italic bold 56px 'Playfair Display', Georgia, serif";
-      ctx.fillText(
-        `♥  ${campaign?.headline || "Special Offers"}  ♥`,
+      drawFittedText(
+        ctx,
+        campaign?.headline || "Special Offers",
         headerCenterX,
-        178
+        178,
+        {
+          maxWidth: 680,
+          defaultSize: 52,
+          minSize: 20,
+          defaultFamily: "Playfair Display",
+          defaultWeight: "bold",
+          defaultStyle: "italic",
+          defaultColor: "#e8b664",
+          prefix: "♥  ",
+          suffix: "  ♥",
+          styleOverride: textStyles.headline,
+        }
       );
 
       // Gold Ribbon
-      drawNotchedRibbon(ctx, 380, 228, 560, 56, {
-        fill: createGoldGradient(ctx, 380, 228, 940, 284, "#dfb160"),
+      drawNotchedRibbon(ctx, 340, 224, 640, 56, {
+        fill: createGoldGradient(ctx, 340, 224, 980, 280, "#dfb160"),
         text:
           campaign?.subheadline || `Unveil your radiant glow for ${festName}`,
-        font: "italic bold 25px 'Playfair Display', Georgia, serif",
+        font: "italic bold 24px 'Playfair Display', Georgia, serif",
+        styleOverride: textStyles.subheadline,
       });
 
       // 3. Left Arch Portrait + Right Cleanup Packages Panel
@@ -407,6 +489,7 @@ function buildPoster2CleanupListGroup(snapshot, width, height, requestRedraw) {
         ),
         text: campaign?.section_title || "All Cleanup Packages",
         font: "bold 28px 'Playfair Display', Georgia, serif",
+        styleOverride: textStyles.sectionTitle,
       });
 
       // 5 Cleanup Package Rows
@@ -425,10 +508,28 @@ function buildPoster2CleanupListGroup(snapshot, width, height, requestRedraw) {
           lineWidth: 2,
         });
         const icons = ["🧖‍♀️", "🍷", "🥣", "✨", "🫧"];
-        ctx.fillStyle = "#f2c97d";
-        ctx.font = "26px 'Lato', sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(icons[idx % icons.length], panelX + 54, centerRowY + 9);
+        if (item.icon_url) {
+          drawCachedOrFallbackImage(
+            ctx,
+            item.icon_url,
+            panelX + 54 - 22,
+            centerRowY - 22,
+            44,
+            44,
+            requestRedraw,
+            () => {
+              ctx.fillStyle = "#f2c97d";
+              ctx.font = "26px 'Lato', sans-serif";
+              ctx.textAlign = "center";
+              ctx.fillText(icons[idx % icons.length], panelX + 54, centerRowY + 9);
+            }
+          );
+        } else {
+          ctx.fillStyle = "#f2c97d";
+          ctx.font = "26px 'Lato', sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(icons[idx % icons.length], panelX + 54, centerRowY + 9);
+        }
 
         // Package Title (2 lines if needed)
         ctx.textAlign = "left";
@@ -471,13 +572,22 @@ function buildPoster2CleanupListGroup(snapshot, width, height, requestRedraw) {
 
       // 4. Footer ("Bookings & Consultations")
       const footY = mainTop + mainHeight + 36;
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#e8be70";
-      ctx.font = "28px 'Playfair Display', Georgia, serif";
-      ctx.fillText(
-        `❧  ${campaign?.cta_text || "Bookings & Consultations"}  ☙`,
+      drawFittedText(
+        ctx,
+        campaign?.cta_text || "Bookings & Consultations",
         width / 2,
-        footY
+        footY,
+        {
+          maxWidth: width - 120,
+          defaultSize: 28,
+          minSize: 16,
+          defaultFamily: "Playfair Display",
+          defaultWeight: "normal",
+          defaultColor: "#e8be70",
+          prefix: "❧  ",
+          suffix: "  ☙",
+          styleOverride: textStyles.ctaText,
+        }
       );
 
       const boxY = footY + 18;
@@ -535,16 +645,23 @@ function buildPoster2CleanupListGroup(snapshot, width, height, requestRedraw) {
       }
 
       // Bottom italic tagline
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#e6b86a";
-      ctx.font = "italic 25px 'Playfair Display', Georgia, serif";
-      ctx.fillText(
-        `${
-          campaign?.footer_tagline ||
-          `This ${festName}, gift your sister the glow she deserves.`
-        }  ♥`,
+      drawFittedText(
+        ctx,
+        campaign?.footer_tagline ||
+          `This ${festName}, gift your sister the glow she deserves.`,
         width / 2,
-        boxY + 132
+        boxY + 132,
+        {
+          maxWidth: width - 80,
+          defaultSize: 24,
+          minSize: 13,
+          defaultFamily: "Playfair Display",
+          defaultWeight: "normal",
+          defaultStyle: "italic",
+          defaultColor: "#e6b86a",
+          suffix: "  ♥",
+          styleOverride: textStyles.footerTagline,
+        }
       );
     }),
   ]);
@@ -592,35 +709,55 @@ function buildPoster3Luxe3ColGroup(snapshot, width, height, requestRedraw) {
         requestRedraw
       );
 
-      // 3. Top-Center Festival Title, Ribbon & Wreath Stamp
-      const centerX = 520;
-      ctx.textAlign = "center";
-      ctx.fillStyle = createGoldGradient(ctx, 350, 40, 700, 140, "#efd085");
-      ctx.font = "italic bold 92px 'Playfair Display', Georgia, serif";
-      ctx.fillText(`🌿 ${festName} 🌿`, centerX, Math.round(132 * scaleY));
+      // 3. Top-Center Festival Title, Ribbon & Wreath Stamp (auto-fitted between x=250 and x=780)
+      const textStyles = campaign?.text_styles || {};
+      const centerX = 515;
+      drawFittedText(ctx, festName, centerX, Math.round(132 * scaleY), {
+        maxWidth: 460,
+        defaultSize: 82,
+        minSize: 30,
+        defaultFamily: "Playfair Display",
+        defaultWeight: "bold",
+        defaultStyle: "italic",
+        defaultColor: createGoldGradient(ctx, 350, 40, 700, 140, "#efd085"),
+        prefix: "🌿 ",
+        suffix: " 🌿",
+      });
 
-      ctx.fillStyle = "#e06d78";
-      ctx.font = "italic bold 54px 'Playfair Display', Georgia, serif";
-      ctx.fillText(
-        `♥  ${campaign?.headline || "Special Offer"}  ♥`,
+      drawFittedText(
+        ctx,
+        campaign?.headline || "Special Offer",
         centerX,
-        Math.round(212 * scaleY)
+        Math.round(212 * scaleY),
+        {
+          maxWidth: 480,
+          defaultSize: 48,
+          minSize: 18,
+          defaultFamily: "Playfair Display",
+          defaultWeight: "bold",
+          defaultStyle: "italic",
+          defaultColor: "#e06d78",
+          prefix: "♥  ",
+          suffix: "  ♥",
+          styleOverride: textStyles.headline,
+        }
       );
 
       // Gold Ribbon Banner
       drawNotchedRibbon(
         ctx,
-        290,
+        280,
         Math.round(256 * scaleY),
-        500,
+        510,
         Math.round(78 * scaleY),
         {
-          fill: createGoldGradient(ctx, 290, 256, 790, 334, "#dfb15b"),
+          fill: createGoldGradient(ctx, 280, 256, 790, 334, "#dfb15b"),
           text:
             campaign?.subheadline ||
             "Celebrate the bond of love with a glow that shines together.",
           font: "21px 'Playfair Display', Georgia, serif",
           rosettes: false,
+          styleOverride: textStyles.subheadline,
         }
       );
 
@@ -630,7 +767,8 @@ function buildPoster3Luxe3ColGroup(snapshot, width, height, requestRedraw) {
         500,
         Math.round(472 * scaleY),
         104,
-        campaign?.badge_text || "SELF-CARE\nIS THE BEST\nGIFT"
+        campaign?.badge_text || "SELF-CARE\nIS THE BEST\nGIFT",
+        textStyles.badgeText
       );
 
       // 4. 3 Ornate Luxe Columns with Colored Ribbon Headers
@@ -743,8 +881,14 @@ function buildPoster3Luxe3ColGroup(snapshot, width, height, requestRedraw) {
         footerTagline:
           campaign?.footer_tagline ||
           `THIS ${festName.toUpperCase()}, GIFT YOUR SISTER THE GLOW SHE DESERVES.`,
+        validityNote: campaign?.validity_note || "",
         showQrCode:
           campaign?.show_qr_code !== undefined ? campaign.show_qr_code : true,
+        qrCodeUrl: campaign?.qr_code_url,
+        onAsyncLoad: requestRedraw,
+        ctaStyle: textStyles.ctaText,
+        footerTaglineStyle: textStyles.footerTagline,
+        validityStyle: textStyles.validityNote,
       });
     }),
   ]);
@@ -805,15 +949,17 @@ function buildPoster4BridalCatalogueGroup(
         requestRedraw
       );
 
+      const textStyles = campaign?.text_styles || {};
       drawCircularStampBadge(
         ctx,
         948,
         Math.round(334 * scaleY),
         88,
-        campaign?.badge_text || "BEAUTY\nTHAT CELEBRATES\nYOU"
+        campaign?.badge_text || "BEAUTY\nTHAT CELEBRATES\nYOU",
+        textStyles.badgeText
       );
 
-      // 3. Top-Center Brand & Campaign Header
+      // 3. Top-Center Brand & Campaign Header (auto-fitted between x=250 and x=830)
       const centerX = 540;
       ctx.textAlign = "center";
       ctx.fillStyle = createGoldGradient(ctx, 300, 40, 780, 95, "#e5c172");
@@ -828,30 +974,58 @@ function buildPoster4BridalCatalogueGroup(
       ctx.font = "bold 17px 'Playfair Display', Georgia, serif";
       ctx.fillText("◆  PROFESSIONAL BEAUTY SERVICES  ◆", centerX, 152);
 
-      ctx.fillStyle = "#e05368";
-      ctx.font = "italic bold 58px 'Playfair Display', Georgia, serif";
-      ctx.fillText(
+      drawFittedText(
+        ctx,
         campaign?.headline || `${festName} Special Offer`,
         centerX,
-        Math.round(228 * scaleY)
+        Math.round(228 * scaleY),
+        {
+          maxWidth: 550,
+          defaultSize: 54,
+          minSize: 22,
+          defaultFamily: "Playfair Display",
+          defaultWeight: "bold",
+          defaultStyle: "italic",
+          defaultColor: "#e05368",
+          styleOverride: textStyles.headline,
+        }
       );
 
-      ctx.fillStyle = "#e6b865";
-      ctx.font = "italic bold 42px 'Playfair Display', Georgia, serif";
-      ctx.fillText(
-        `♥  ${campaign?.subheadline || "For Every Occasion"}  ♥`,
+      drawFittedText(
+        ctx,
+        campaign?.subheadline || "For Every Occasion",
         centerX,
-        Math.round(288 * scaleY)
+        Math.round(288 * scaleY),
+        {
+          maxWidth: 550,
+          defaultSize: 38,
+          minSize: 16,
+          defaultFamily: "Playfair Display",
+          defaultWeight: "bold",
+          defaultStyle: "italic",
+          defaultColor: "#e6b865",
+          prefix: "♥  ",
+          suffix: "  ♥",
+          styleOverride: textStyles.subheadline,
+        }
       );
 
-      ctx.fillStyle = "#f1cf85";
-      ctx.font = "22px 'Playfair Display', Georgia, serif";
-      ctx.fillText(
-        `❧  ${
-          campaign?.secondary_subheadline || "Elegance. Confidence. You."
-        }  ☙`,
+      drawFittedText(
+        ctx,
+        campaign?.secondary_subheadline || "Elegance. Confidence. You.",
         centerX,
-        Math.round(334 * scaleY)
+        Math.round(334 * scaleY),
+        {
+          maxWidth: 540,
+          defaultSize: 22,
+          minSize: 14,
+          defaultFamily: "Playfair Display",
+          defaultWeight: "normal",
+          defaultColor: "#f1cf85",
+          prefix: "❧  ",
+          suffix: "  ☙",
+          styleOverride: textStyles.secondarySubheadline,
+        }
       );
 
       // 4. Section 1: MAKEUP & STYLING PACKAGES (2x2 Grid on right of portrait)
@@ -861,13 +1035,22 @@ function buildPoster4BridalCatalogueGroup(
         stroke: "#d4af63",
         lineWidth: 1.8,
       });
-      ctx.fillStyle = "#f1cf85";
-      ctx.font = "bold 25px 'Playfair Display', Georgia, serif";
-      ctx.textAlign = "center";
-      ctx.fillText(
-        `❈  ${campaign?.section_title || "MAKEUP & STYLING PACKAGES"}  ❈`,
+      drawFittedText(
+        ctx,
+        campaign?.section_title || "MAKEUP & STYLING PACKAGES",
         605,
-        sec1Y + 34
+        sec1Y + 34,
+        {
+          maxWidth: 580,
+          defaultSize: 25,
+          minSize: 15,
+          defaultFamily: "Playfair Display",
+          defaultWeight: "bold",
+          defaultColor: "#f1cf85",
+          prefix: "❈  ",
+          suffix: "  ❈",
+          styleOverride: textStyles.sectionTitle,
+        }
       );
 
       const gridCards =
@@ -973,6 +1156,9 @@ function buildPoster4BridalCatalogueGroup(
         stroke: "#d4af63",
         lineWidth: 1.6,
       });
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#f1cf85";
+      ctx.font = "bold 22px 'Playfair Display', Georgia, serif";
       ctx.fillText(
         "✂  À LA CARTE SERVICES  ✂",
         rightX + halfW / 2,
@@ -1141,10 +1327,366 @@ function buildPoster4BridalCatalogueGroup(
         footerTagline:
           campaign?.footer_tagline ||
           "BEAUTIFUL INSIDE & OUT, FOR EVERY OCCASION",
+        validityNote: campaign?.validity_note || "",
         showQrCode: Boolean(campaign?.show_qr_code),
+        qrCodeUrl: campaign?.qr_code_url,
+        onAsyncLoad: requestRedraw,
+        ctaStyle: textStyles.ctaText,
+        footerTaglineStyle: textStyles.footerTagline,
+        validityStyle: textStyles.validityNote,
       });
     }),
   ]);
+}
+
+export function renderSnapshotPreviewCardToCanvas(canvas, snapshot) {
+  if (!canvas || !snapshot) {
+    return { rendered: false };
+  }
+
+  const offerings = Array.isArray(snapshot.offerings) ? snapshot.offerings : [];
+  const isSingleCol =
+    Number(snapshot?.template?.layout_config?.columns) === 1 ||
+    offerings.length === 1;
+  const rowsCount = isSingleCol
+    ? offerings.length
+    : Math.ceil(offerings.length / 2);
+
+  const width = 1080;
+  const height = Math.max(920, 480 + rowsCount * 220 + (snapshot.campaign?.show_qr_code ? 80 : 0));
+  canvas.width = width;
+  canvas.height = height;
+
+  let ctx = null;
+  try {
+    ctx = canvas.getContext("2d");
+  } catch {
+    ctx = null;
+  }
+  if (!ctx) {
+    return { rendered: false };
+  }
+
+  const theme = snapshot?.template?.theme || {};
+  const textStyles = snapshot?.campaign?.text_styles || {};
+
+  // Card Background & Double Gold Border
+  ctx.fillStyle = theme.background || "#0f0506";
+  ctx.fillRect(0, 0, width, height);
+  ctx.strokeStyle = theme.secondary || "#d4af63";
+  ctx.lineWidth = 6;
+  ctx.strokeRect(12, 12, width - 24, height - 24);
+  ctx.strokeStyle = "rgba(212, 175, 99, 0.35)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(22, 22, width - 44, height - 44);
+
+  const centerX = width / 2;
+  let cursorY = 66;
+
+  // Motif Chip
+  const motif = snapshot?.festival?.motif_label || "✨";
+  drawChamferedRect(ctx, centerX - 110, cursorY - 26, 220, 38, 12, {
+    fill: snapshot?.festival?.accent_color || "#c2185b",
+    stroke: "#f1cf85",
+    lineWidth: 1.5,
+  });
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 18px 'Lato', sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(motif, centerX, cursorY);
+  cursorY += 54;
+
+  // Brand Name
+  ctx.fillStyle = theme.accent || "#f1cf85";
+  ctx.font = `bold 34px '${snapshot?.brand?.heading_font || "Playfair Display"}', Georgia, serif`;
+  ctx.fillText(
+    snapshot?.brand?.brand_name || "Aspen Glow by Shilpi",
+    centerX,
+    cursorY
+  );
+  cursorY += 54;
+
+  // Headline
+  drawFittedText(
+    ctx,
+    snapshot?.campaign?.headline || "",
+    centerX,
+    cursorY,
+    {
+      maxWidth: width - 120,
+      defaultSize: 44,
+      minSize: 20,
+      defaultFamily: snapshot?.brand?.heading_font || "Playfair Display",
+      defaultWeight: "bold",
+      defaultStyle: "italic",
+      defaultColor: theme.primary || "#e05368",
+      styleOverride: textStyles.headline,
+    }
+  );
+  cursorY += 46;
+
+  // Subheadline Pill
+  if (snapshot?.campaign?.subheadline) {
+    drawNotchedRibbon(ctx, centerX - 340, cursorY - 28, 680, 48, {
+      fill: theme.secondary || "#d4af63",
+      text: snapshot.campaign.subheadline,
+      textColor: "#1b080a",
+      defaultSize: 22,
+      styleOverride: textStyles.subheadline,
+    });
+    cursorY += 50;
+  }
+
+  // Secondary Subheadline
+  if (snapshot?.campaign?.secondary_subheadline) {
+    drawFittedText(
+      ctx,
+      snapshot.campaign.secondary_subheadline,
+      centerX,
+      cursorY,
+      {
+        maxWidth: width - 140,
+        defaultSize: 20,
+        minSize: 13,
+        defaultFamily: "Playfair Display",
+        defaultWeight: "normal",
+        defaultColor: "#f5ebe6",
+        styleOverride: textStyles.secondarySubheadline,
+      }
+    );
+    cursorY += 34;
+  }
+
+  // Section Title & Subtitle
+  if (snapshot?.campaign?.section_title) {
+    drawFittedText(
+      ctx,
+      snapshot.campaign.section_title,
+      centerX,
+      cursorY,
+      {
+        maxWidth: width - 160,
+        defaultSize: 24,
+        minSize: 14,
+        defaultFamily: "Playfair Display",
+        defaultWeight: "bold",
+        defaultColor: "#f1cf85",
+        prefix: "❈ ",
+        suffix: " ❈",
+        styleOverride: textStyles.sectionTitle,
+      }
+    );
+    cursorY += 36;
+  }
+
+  // Offerings Grid
+  const defaultCols = ["#4e1014", "#261326", "#4f3811", "#0c3329"];
+  const sidePad = 48;
+  const colGap = 24;
+  const cardW = isSingleCol
+    ? width - sidePad * 2
+    : (width - sidePad * 2 - colGap) / 2;
+  const cardH = 196;
+
+  offerings.forEach((off, idx) => {
+    const colIdx = isSingleCol ? 0 : idx % 2;
+    const rowIdx = isSingleCol ? idx : Math.floor(idx / 2);
+    const cardX = sidePad + colIdx * (cardW + colGap);
+    const cardY = cursorY + rowIdx * (cardH + 20);
+    const cardBg = off.card_color || defaultCols[idx % defaultCols.length];
+
+    drawChamferedRect(ctx, cardX, cardY, cardW, cardH, 12, {
+      fill: cardBg,
+      stroke: "#d4af63",
+      lineWidth: 2,
+    });
+
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#f1cf85";
+    ctx.font = "bold 24px 'Playfair Display', Georgia, serif";
+    ctx.fillText(off.name || "", cardX + 24, cardY + 40);
+
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#fff1c1";
+    ctx.font = "bold 28px 'Playfair Display', Georgia, serif";
+    ctx.fillText(off.price_formatted || "", cardX + cardW - 24, cardY + 40);
+
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#f5ebe6";
+    ctx.font = "17px 'Lato', sans-serif";
+    (off.items || []).slice(0, 4).forEach((line, lIdx) => {
+      ctx.fillText(`✦ ${line}`, cardX + 24, cardY + 74 + lIdx * 24);
+    });
+
+    if (off.tagline) {
+      ctx.fillStyle = "#f1cf85";
+      ctx.font = "bold 15px 'Playfair Display', Georgia, serif";
+      ctx.fillText(off.tagline, cardX + 24, cardY + cardH - 16);
+    }
+  });
+
+  cursorY += rowsCount * (cardH + 20) + 20;
+
+  // Validity Note
+  if (snapshot?.campaign?.validity_note) {
+    drawFittedText(ctx, snapshot.campaign.validity_note, centerX, cursorY, {
+      maxWidth: width - 120,
+      defaultSize: 18,
+      minSize: 12,
+      defaultFamily: "Lato",
+      defaultWeight: "bold",
+      defaultColor: "#f1cf85",
+      styleOverride: textStyles.validityNote,
+    });
+    cursorY += 32;
+  }
+
+  // Footer Box
+  const footerH = snapshot?.campaign?.show_qr_code ? 175 : 130;
+  drawChamferedRect(ctx, sidePad, cursorY, width - sidePad * 2, footerH, 12, {
+    fill: "#1a0709",
+    stroke: "#d4af63",
+    lineWidth: 2,
+  });
+
+  drawFittedText(
+    ctx,
+    snapshot?.campaign?.cta_text || "BOOK YOUR APPOINTMENT NOW!",
+    centerX,
+    cursorY + 34,
+    {
+      maxWidth: width - 160,
+      defaultSize: 22,
+      minSize: 14,
+      defaultFamily: "Playfair Display",
+      defaultWeight: "bold",
+      defaultColor: "#f1cf85",
+      styleOverride: textStyles.ctaText,
+    }
+  );
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 20px 'Lato', sans-serif";
+  ctx.fillText(
+    `📞 ${snapshot?.contact?.phone || "7011413546"} (Call/WhatsApp) • WhatsApp: ${
+      snapshot?.contact?.whatsapp || "7011413546"
+    }`,
+    centerX,
+    cursorY + 66
+  );
+
+  ctx.font = "17px 'Lato', sans-serif";
+  ctx.fillText(
+    `📍 ${snapshot?.contact?.address || ""}`,
+    centerX,
+    cursorY + 94
+  );
+
+  if (snapshot?.campaign?.footer_tagline) {
+    drawFittedText(
+      ctx,
+      `${snapshot.campaign.footer_tagline} ♥`,
+      centerX,
+      cursorY + footerH - 16,
+      {
+        maxWidth: width - 140,
+        defaultSize: 18,
+        minSize: 12,
+        defaultFamily: "Playfair Display",
+        defaultWeight: "bold",
+        defaultColor: "#e05368",
+        styleOverride: textStyles.footerTagline,
+      }
+    );
+  }
+
+  return { rendered: true, width, height };
+}
+
+export function exportSnapshotPreviewCardToPng(
+  snapshot,
+  options = {},
+  targetCanvas = null
+) {
+  const baseFilename = buildPosterExportFilename(snapshot).replace(
+    /\.png$/i,
+    ""
+  );
+  const filename = `${baseFilename}-preview-card.png`;
+  const canvas =
+    targetCanvas ||
+    (typeof document !== "undefined" &&
+    typeof document.createElement === "function"
+      ? document.createElement("canvas")
+      : null);
+
+  if (!canvas) {
+    return {
+      ok: false,
+      dataUrl: "",
+      filename,
+      error: SAFE_EXPORT_ERROR,
+    };
+  }
+
+  const renderResult = renderSnapshotPreviewCardToCanvas(canvas, snapshot);
+  if (!renderResult.rendered || typeof canvas.toDataURL !== "function") {
+    return {
+      ok: false,
+      dataUrl: "",
+      filename,
+      error: SAFE_EXPORT_ERROR,
+    };
+  }
+
+  try {
+    const dataUrl = canvas.toDataURL("image/png");
+    if (!dataUrl || !dataUrl.startsWith("data:image/png")) {
+      return {
+        ok: false,
+        dataUrl: "",
+        filename,
+        error: SAFE_EXPORT_ERROR,
+      };
+    }
+
+    if (typeof options.onDownload === "function") {
+      options.onDownload({
+        dataUrl,
+        filename,
+        width: renderResult.width,
+        height: renderResult.height,
+      });
+    } else if (
+      typeof document !== "undefined" &&
+      typeof document.createElement === "function"
+    ) {
+      const anchor = document.createElement("a");
+      anchor.href = dataUrl;
+      anchor.download = filename;
+      anchor.rel = "noopener";
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+    }
+
+    return {
+      ok: true,
+      dataUrl,
+      filename,
+      width: renderResult.width,
+      height: renderResult.height,
+      error: null,
+    };
+  } catch {
+    return {
+      ok: false,
+      dataUrl: "",
+      filename,
+      error: SAFE_EXPORT_ERROR,
+    };
+  }
 }
 
 const canvasRenderState = new WeakMap();

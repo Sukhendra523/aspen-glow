@@ -343,9 +343,10 @@ export default function AdminSettingsPage() {
                       <TextField
                         id="primary-color"
                         label="Primary Color (Hex)"
+                        type="color"
                         fullWidth
                         required
-                        value={brandForm.primary_color}
+                        value={brandForm.primary_color || "#c2185b"}
                         onChange={handleBrandChange("primary_color")}
                         error={Boolean(brandFieldErrors.primary_color)}
                         helperText={brandFieldErrors.primary_color}
@@ -356,9 +357,10 @@ export default function AdminSettingsPage() {
                       <TextField
                         id="secondary-color"
                         label="Secondary Color (Hex)"
+                        type="color"
                         fullWidth
                         required
-                        value={brandForm.secondary_color}
+                        value={brandForm.secondary_color || "#d4af63"}
                         onChange={handleBrandChange("secondary_color")}
                         error={Boolean(brandFieldErrors.secondary_color)}
                         helperText={brandFieldErrors.secondary_color}
@@ -369,9 +371,10 @@ export default function AdminSettingsPage() {
                       <TextField
                         id="background-color"
                         label="Background Color (Hex)"
+                        type="color"
                         fullWidth
                         required
-                        value={brandForm.background_color}
+                        value={brandForm.background_color || "#fffaf7"}
                         onChange={handleBrandChange("background_color")}
                         error={Boolean(brandFieldErrors.background_color)}
                         helperText={brandFieldErrors.background_color}

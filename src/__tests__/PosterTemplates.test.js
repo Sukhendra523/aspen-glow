@@ -397,6 +397,8 @@ describe("Ticket 7 — Snapshot Resolver & Canvas Poster Renderer", () => {
 });
 
 describe("Ticket 7 — Admin Poster Studio UI (/admin/posters)", () => {
+  jest.setTimeout(30000);
+
   test("redirects unauthenticated user from /admin/posters to /admin/login", async () => {
     const { client } = createPosterStudioSupabaseClient({ isAdmin: false });
     renderApp(["/admin/posters"], client);
@@ -460,6 +462,71 @@ describe("Ticket 7 — Admin Poster Studio UI (/admin/posters)", () => {
     expect(
       await within(preview).findByText(/Rakhi Special Pampering Offers/i)
     ).toBeInTheDocument();
+  });
+
+  test("supports Reset Form, Clear Form, Tiptap typography customization, Export Preview Card PNG, and scannable QR code", async () => {
+    const { client } = createPosterStudioSupabaseClient({ isAdmin: true });
+    renderApp(["/admin/posters"], client);
+
+    const preview = await screen.findByTestId("poster-snapshot-preview");
+    expect(
+      within(preview).getByText(/Karwa Chauth Special Glow Packages/i)
+    ).toBeInTheDocument();
+
+    // Verify Export Preview Card PNG button is rendered
+    expect(
+      screen.getByRole("button", { name: /Export Preview Card PNG/i })
+    ).toBeInTheDocument();
+
+    // Open Tiptap Rich Text & Font Style toolbar on Poster Headline
+    const headlineStyleBtn = screen.getByRole("button", {
+      name: /Customize typography for Poster Headline/i,
+    });
+    await userEvent.click(headlineStyleBtn);
+    const headlineToolbar = screen.getByTestId("rich-toolbar-headline");
+    expect(
+      within(headlineToolbar).getByText(/Tiptap Typography & Style Controls/i)
+    ).toBeInTheDocument();
+
+    // Toggle Uppercase (AA) and Champagne Gold color swatch in headline toolbar
+    await userEvent.click(
+      within(headlineToolbar).getByRole("button", { name: "AA" })
+    );
+    await userEvent.click(
+      within(headlineToolbar).getByRole("button", {
+        name: /Set Poster Headline color to Champagne Gold/i,
+      })
+    );
+    expect(await screen.findByText("Custom Style")).toBeInTheDocument();
+
+    // Clear Form clears all campaign inputs and selections
+    await userEvent.click(screen.getByRole("button", { name: /Clear Form/i }));
+    expect(
+      await screen.findByText(/Cleared all Poster Configuration form inputs/i)
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/Campaign Name/i)).toHaveValue("");
+    expect(screen.getByLabelText(/Poster Headline/i)).toHaveValue("");
+
+    // Reset Form restores default festival, headline, and packages
+    await userEvent.click(screen.getByRole("button", { name: /Reset Form/i }));
+    expect(
+      await screen.findByText(
+        /Reset Poster Configuration form to default values/i
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/Poster Headline/i)).toHaveValue(
+      "Karwa Chauth Special Glow Packages"
+    );
+
+    // Enable QR code and verify /aspen-glow-QR-code.png renders in preview
+    const qrCheckbox = screen.getByLabelText(
+      /Display Scannable Booking QR Code in Footer/i
+    );
+    await userEvent.click(qrCheckbox);
+    const qrImg = await within(preview).findByAltText(
+      /Scannable Booking QR Code/i
+    );
+    expect(qrImg).toHaveAttribute("src", "/aspen-glow-QR-code.png");
   });
 });
 

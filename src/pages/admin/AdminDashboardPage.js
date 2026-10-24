@@ -61,6 +61,15 @@ const CMS_MODULES = [
     actionLabel: "Manage Media",
   },
   {
+    title: "Festival Management",
+    description:
+      "Create, edit, and archive festivals, default headlines, motifs, and accent colors.",
+    status: "Active",
+    active: true,
+    path: "/admin/festivals",
+    actionLabel: "Manage Festivals",
+  },
+  {
     title: "Festival Poster Studio",
     description:
       "Create festival campaign posters with immutable content snapshots and PNG export.",

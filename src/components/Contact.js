@@ -92,6 +92,44 @@ const Contact = ({ contact = DEFAULT_CONTACT_SETTINGS }) => {
                 </Button>
               )}
             </Box>
+
+            <Box
+              sx={{
+                mt: 2,
+                pt: 2.5,
+                borderTop: "1px dashed",
+                borderColor: "divider",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 1,
+                width: "100%",
+              }}
+            >
+              <Box
+                component="img"
+                src="/aspen-glow-QR-code.png"
+                alt="Scan QR Code to Book or Contact Aspen Glow by Shilpi"
+                sx={{
+                  width: 148,
+                  height: 148,
+                  objectFit: "contain",
+                  p: 1,
+                  bgcolor: "#ffffff",
+                  border: "2px solid",
+                  borderColor: "primary.main",
+                  borderRadius: 2,
+                  boxShadow: 1,
+                }}
+              />
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight="bold"
+              >
+                Scan QR Code to Book Now
+              </Typography>
+            </Box>
           </Box>
         </Card>
       </Container>

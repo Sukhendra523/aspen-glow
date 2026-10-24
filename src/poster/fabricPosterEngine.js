@@ -267,6 +267,98 @@ export function drawOrnateCardFrame(
   }
 }
 
+export function buildCanvasFont({
+  fontStyle = "normal",
+  fontWeight = "bold",
+  fontSize = 24,
+  fontFamily = "Playfair Display",
+} = {}) {
+  const stylePart = fontStyle && fontStyle !== "normal" ? `${fontStyle} ` : "";
+  const weightPart =
+    fontWeight && fontWeight !== "normal" ? `${fontWeight} ` : "";
+  return `${stylePart}${weightPart}${Math.round(fontSize)}px '${fontFamily}', Georgia, serif`;
+}
+
+export function estimateCanvasTextWidth(ctx, text, fontSize) {
+  const str = String(text || "");
+  if (!str) return 0;
+  let measured = 0;
+  if (typeof ctx.measureText === "function") {
+    try {
+      const m = ctx.measureText(str);
+      if (m && typeof m.width === "number" && m.width > 0) {
+        measured = m.width;
+      }
+    } catch {
+      measured = 0;
+    }
+  }
+  const heuristic = str.length * fontSize * 0.54;
+  return Math.max(measured, heuristic);
+}
+
+export function drawFittedText(
+  ctx,
+  rawText,
+  x,
+  y,
+  {
+    maxWidth = 620,
+    defaultSize = 44,
+    minSize = 14,
+    defaultFamily = "Playfair Display",
+    defaultWeight = "bold",
+    defaultStyle = "normal",
+    defaultColor = "#f1cf85",
+    align = "center",
+    prefix = "",
+    suffix = "",
+    styleOverride = null,
+  } = {}
+) {
+  let clean = String(rawText || "").trim();
+  if (!clean) return;
+
+  const st = styleOverride && typeof styleOverride === "object" ? styleOverride : {};
+  if (st.textTransform === "uppercase") {
+    clean = clean.toUpperCase();
+  }
+
+  const fullText = `${prefix}${clean}${suffix}`;
+  const fontFamily = st.fontFamily || defaultFamily;
+  const fontWeight = st.fontWeight || defaultWeight;
+  const fontStyle = st.fontStyle || defaultStyle;
+  const fillColor = st.color || defaultColor;
+  const customSize = Number(st.fontSize) || 0;
+
+  let size = customSize > 0 ? customSize : defaultSize;
+  const effectiveMaxWidth = customSize > 0 ? Math.max(maxWidth, 960) : maxWidth;
+
+  while (size > minSize) {
+    ctx.font = buildCanvasFont({
+      fontStyle,
+      fontWeight,
+      fontSize: size,
+      fontFamily,
+    });
+    const estW = estimateCanvasTextWidth(ctx, fullText, size);
+    if (estW <= effectiveMaxWidth) {
+      break;
+    }
+    size -= 2;
+  }
+
+  ctx.font = buildCanvasFont({
+    fontStyle,
+    fontWeight,
+    fontSize: size,
+    fontFamily,
+  });
+  ctx.fillStyle = fillColor;
+  ctx.textAlign = st.textAlign || align;
+  ctx.fillText(fullText, x, y);
+}
+
 export function drawNotchedRibbon(
   ctx,
   x,
@@ -280,7 +372,9 @@ export function drawNotchedRibbon(
     text = "",
     textColor = "#240a07",
     font = "italic bold 24px 'Playfair Display', Georgia, serif",
+    defaultSize = 23,
     rosettes = true,
+    styleOverride = null,
   } = {}
 ) {
   if (!hasPathApi(ctx)) {
@@ -306,11 +400,24 @@ export function drawNotchedRibbon(
   }
 
   if (text) {
-    ctx.fillStyle = textColor;
-    ctx.font = font;
-    ctx.textAlign = "center";
-    const display = rosettes ? `❈  ${text}  ❈` : text;
-    ctx.fillText(display, x + w / 2, y + h / 2 + 8);
+    const innerMaxWidth = Math.max(120, w - notch * 2 - 26);
+    const parsedSizeMatch = String(font || "").match(/(\d+)px/);
+    const startSize = parsedSizeMatch ? Number(parsedSizeMatch[1]) : defaultSize;
+    const isItalic = /italic/i.test(font);
+    const isBold = /bold/i.test(font);
+
+    drawFittedText(ctx, text, x + w / 2, y + h / 2 + 8, {
+      maxWidth: innerMaxWidth,
+      defaultSize: startSize,
+      minSize: 13,
+      defaultFamily: "Playfair Display",
+      defaultWeight: isBold ? "bold" : "normal",
+      defaultStyle: isItalic ? "italic" : "normal",
+      defaultColor: textColor,
+      prefix: rosettes ? "❈  " : "",
+      suffix: rosettes ? "  ❈" : "",
+      styleOverride,
+    });
   }
 }
 
@@ -486,7 +593,8 @@ export function drawCircularStampBadge(
   cx,
   cy,
   radius,
-  lines = ["GLOW", "INSIDE & OUT", "BECAUSE", "YOU DESERVE IT!"]
+  lines = ["GLOW", "INSIDE & OUT", "BECAUSE", "YOU DESERVE IT!"],
+  styleOverride = null
 ) {
   drawCircle(ctx, cx, cy, radius, {
     fill: "rgba(18, 7, 9, 0.92)",
@@ -499,8 +607,10 @@ export function drawCircularStampBadge(
     lineWidth: 1,
   });
 
+  const st =
+    styleOverride && typeof styleOverride === "object" ? styleOverride : {};
   ctx.textAlign = "center";
-  ctx.fillStyle = "#f8efe6";
+  ctx.fillStyle = st.color || "#f8efe6";
   const cleanLines = Array.isArray(lines)
     ? lines
     : String(lines || "")
@@ -508,11 +618,24 @@ export function drawCircularStampBadge(
         .filter(Boolean);
 
   const startY = cy - ((cleanLines.length - 1) * 18) / 2 - 4;
-  cleanLines.forEach((line, idx) => {
-    ctx.font =
-      idx === 0
-        ? "bold 19px 'Playfair Display', Georgia, serif"
-        : "14px 'Lato', sans-serif";
+  cleanLines.forEach((rawLine, idx) => {
+    const line =
+      st.textTransform === "uppercase"
+        ? String(rawLine).toUpperCase()
+        : String(rawLine);
+    const baseSize =
+      Number(st.fontSize) > 0
+        ? Math.min(24, Number(st.fontSize))
+        : idx === 0
+        ? 19
+        : 14;
+    ctx.font = buildCanvasFont({
+      fontStyle: st.fontStyle || "normal",
+      fontWeight: st.fontWeight || (idx === 0 ? "bold" : "normal"),
+      fontSize: baseSize,
+      fontFamily: st.fontFamily || (idx === 0 ? "Playfair Display" : "Lato"),
+    });
+    ctx.fillStyle = st.color || "#f8efe6";
     ctx.fillText(line, cx, startY + idx * 19);
   });
 
@@ -546,7 +669,15 @@ export function drawServiceBulletIcon(ctx, cx, cy, index = 0, itemText = "") {
   ctx.fillText(glyph, cx, cy + 6);
 }
 
-export function drawCardMedallion(ctx, cx, cy, radius, colIndex = 0) {
+export function drawCardMedallion(
+  ctx,
+  cx,
+  cy,
+  radius,
+  colIndex = 0,
+  iconUrl = "",
+  onAsyncLoad = null
+) {
   const fills = ["#8e2430", "#221a2e", "#2d2212", "#102b23"];
   drawCircle(ctx, cx, cy, radius, {
     fill: fills[colIndex % fills.length],
@@ -558,6 +689,20 @@ export function drawCardMedallion(ctx, cx, cy, radius, colIndex = 0) {
     stroke: "rgba(241, 207, 133, 0.45)",
     lineWidth: 1,
   });
+
+  if (iconUrl) {
+    const iconSize = Math.round(radius * 1.25);
+    const drawn = drawCachedOrFallbackImage(
+      ctx,
+      iconUrl,
+      cx - iconSize / 2,
+      cy - iconSize / 2,
+      iconSize,
+      iconSize,
+      onAsyncLoad
+    );
+    if (drawn) return;
+  }
 
   const emblems = ["👩", "✦", "🪷", "👑"];
   ctx.fillStyle = "#f7d794";
@@ -667,6 +812,36 @@ export function drawDeterministicQrCode(ctx, x, y, size) {
   }
 }
 
+export const DEFAULT_QR_CODE_URL = "/aspen-glow-QR-code.png";
+
+export function drawScannableQrCode(
+  ctx,
+  x,
+  y,
+  size,
+  qrCodeUrl = DEFAULT_QR_CODE_URL,
+  onAsyncLoad = null
+) {
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(x, y, size, size);
+  ctx.strokeStyle = "#d4af63";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, size, size);
+
+  drawCachedOrFallbackImage(
+    ctx,
+    qrCodeUrl || DEFAULT_QR_CODE_URL,
+    x + 2,
+    y + 2,
+    size - 4,
+    size - 4,
+    onAsyncLoad,
+    () => {
+      drawDeterministicQrCode(ctx, x, y, size);
+    }
+  );
+}
+
 export function drawStandardFooter(
   ctx,
   x,
@@ -676,9 +851,27 @@ export function drawStandardFooter(
     contact,
     ctaText = "BOOK YOUR APPOINTMENT NOW!",
     footerTagline = "THIS TEEJ, GIFT YOUR SISTER THE GLOW SHE DESERVES.",
+    validityNote = "",
     showQrCode = false,
+    qrCodeUrl = DEFAULT_QR_CODE_URL,
+    onAsyncLoad = null,
+    ctaStyle = null,
+    footerTaglineStyle = null,
+    validityStyle = null,
   } = {}
 ) {
+  if (validityNote) {
+    drawFittedText(ctx, validityNote, x + w / 2, y - 8, {
+      maxWidth: w - 40,
+      defaultSize: 15,
+      minSize: 11,
+      defaultFamily: "Lato",
+      defaultWeight: "bold",
+      defaultColor: "#f1cf85",
+      styleOverride: validityStyle,
+    });
+  }
+
   // CTA Ribbon
   const ctaW = Math.min(w * 0.62, 620);
   const ctaX = x + (w - ctaW) / 2;
@@ -687,10 +880,17 @@ export function drawStandardFooter(
     stroke: "#d4af63",
     lineWidth: 1.8,
   });
-  ctx.fillStyle = "#f3cf85";
-  ctx.font = "bold 20px 'Playfair Display', Georgia, serif";
-  ctx.textAlign = "center";
-  ctx.fillText(`❖  ${ctaText}  ❖`, x + w / 2, y + 28);
+  drawFittedText(ctx, ctaText, x + w / 2, y + 28, {
+    maxWidth: ctaW - 36,
+    defaultSize: 20,
+    minSize: 13,
+    defaultFamily: "Playfair Display",
+    defaultWeight: "bold",
+    defaultColor: "#f3cf85",
+    prefix: "❖  ",
+    suffix: "  ❖",
+    styleOverride: ctaStyle,
+  });
 
   // Contact Bar Box
   const barY = y + 52;
@@ -750,10 +950,10 @@ export function drawStandardFooter(
     ctx.fillText(addressParts[1].trim(), addrX + 48, barY + 62);
   }
 
-  // Right widget: QR Code OR Advance Booking Recommended
+  // Right widget: Original Scannable QR Code OR Advance Booking Recommended
   const rightX = x + w - 245;
   if (showQrCode) {
-    drawDeterministicQrCode(ctx, rightX, barY + 7, 68);
+    drawScannableQrCode(ctx, rightX, barY + 7, 68, qrCodeUrl, onAsyncLoad);
     ctx.textAlign = "left";
     ctx.fillStyle = "#f1cf85";
     ctx.font = "bold 16px 'Playfair Display', Georgia, serif";
@@ -778,10 +978,16 @@ export function drawStandardFooter(
   }
 
   // Bottom closing tagline
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#e05368";
-  ctx.font = "bold 19px 'Playfair Display', Georgia, serif";
-  ctx.fillText(`${footerTagline}  ♥`, x + w / 2, barY + barH + 30);
+  drawFittedText(ctx, footerTagline, x + w / 2, barY + barH + 30, {
+    maxWidth: w - 40,
+    defaultSize: 19,
+    minSize: 12,
+    defaultFamily: "Playfair Display",
+    defaultWeight: "bold",
+    defaultColor: "#e05368",
+    suffix: "  ♥",
+    styleOverride: footerTaglineStyle,
+  });
 }
 
 export function wrapCanvasTextLines(ctx, text, maxChars = 26) {

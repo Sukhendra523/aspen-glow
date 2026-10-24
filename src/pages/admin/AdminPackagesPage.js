@@ -38,6 +38,7 @@ import {
   formatPackageServiceLine,
   updatePackageRecord,
 } from "../../services/packageService";
+import MediaLibraryIconPicker from "../../components/admin/MediaLibraryIconPicker";
 import { useAuth } from "../../context/AuthContext";
 
 function mapPackageToForm(pkg) {
@@ -60,6 +61,7 @@ function mapPackageToForm(pkg) {
         ? String(pkg.price_inr)
         : "",
     icon_name: pkg.icon_name || "AutoAwesome",
+    icon_url: pkg.icon_url || "",
     display_order:
       pkg.display_order !== undefined && pkg.display_order !== null
         ? String(pkg.display_order)
@@ -79,6 +81,7 @@ function serializePackageForm(form) {
     description: form.description || "",
     price_inr: String(form.price_inr ?? ""),
     icon_name: form.icon_name || "AutoAwesome",
+    icon_url: form.icon_url || "",
     display_order: String(form.display_order ?? "1"),
     status: form.status || "draft",
     package_group: form.package_group || "Multi-Service Packages",
@@ -564,6 +567,20 @@ export default function AdminPackagesPage() {
                     </Grid>
                   </Grid>
 
+                  <MediaLibraryIconPicker
+                    id="package-icon-url"
+                    label="Package Custom Icon from Media Library (optional)"
+                    value={form.icon_url || ""}
+                    onChange={(nextUrl) => {
+                      setForm((prev) => ({ ...prev, icon_url: nextUrl }));
+                      setSuccessMessage("");
+                    }}
+                    error={Boolean(fieldErrors.icon_url)}
+                    helperText={fieldErrors.icon_url}
+                    disabled={saving}
+                    client={client}
+                  />
+
                   <TextField
                     id="package-description"
                     label="Description"
@@ -622,11 +639,11 @@ export default function AdminPackagesPage() {
                     <Grid size={{ xs: 12, sm: 4 }}>
                       <TextField
                         id="package-card-color"
-                        label="Poster Card Color Hex"
+                        label="Poster Card Color"
+                        type="color"
                         fullWidth
                         size="small"
-                        placeholder="#4e1014"
-                        value={form.card_color || ""}
+                        value={form.card_color || "#4e1014"}
                         onChange={handleFieldChange("card_color")}
                         disabled={saving}
                       />

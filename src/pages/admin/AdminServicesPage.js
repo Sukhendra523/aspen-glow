@@ -36,6 +36,7 @@ import {
   fetchAdminServices,
   updateServiceRecord,
 } from "../../services/serviceCatalogueService";
+import MediaLibraryIconPicker from "../../components/admin/MediaLibraryIconPicker";
 import { useAuth } from "../../context/AuthContext";
 
 const FORM_KEYS = [
@@ -46,6 +47,7 @@ const FORM_KEYS = [
   "price_inr",
   "price_label",
   "icon_name",
+  "icon_url",
   "display_order",
   "status",
 ];
@@ -65,6 +67,7 @@ function mapServiceToForm(service) {
         : "",
     price_label: service.price_label || "",
     icon_name: service.icon_name || "AutoAwesome",
+    icon_url: service.icon_url || "",
     display_order:
       service.display_order !== undefined && service.display_order !== null
         ? String(service.display_order)
@@ -460,6 +463,20 @@ export default function AdminServicesPage() {
                       />
                     </Grid>
                   </Grid>
+
+                  <MediaLibraryIconPicker
+                    id="service-icon-url"
+                    label="Service Custom Icon from Media Library (optional)"
+                    value={form.icon_url || ""}
+                    onChange={(nextUrl) => {
+                      setForm((prev) => ({ ...prev, icon_url: nextUrl }));
+                      setSuccessMessage("");
+                    }}
+                    error={Boolean(fieldErrors.icon_url)}
+                    helperText={fieldErrors.icon_url}
+                    disabled={saving}
+                    client={client}
+                  />
 
                   <TextField
                     id="service-description"

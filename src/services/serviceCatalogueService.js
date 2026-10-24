@@ -25,6 +25,7 @@ export function validateServiceInput(input = {}) {
   const description = (input.description || "").trim();
   const priceLabel = (input.price_label || "").trim();
   const iconName = (input.icon_name || "AutoAwesome").trim();
+  const iconUrl = (input.icon_url || "").trim();
   const status = (input.status || "draft").trim();
 
   const rawPrice =
@@ -76,6 +77,15 @@ export function validateServiceInput(input = {}) {
     errors.icon_name = "Select an approved service icon.";
   }
 
+  if (
+    iconUrl &&
+    (iconUrl.length > 500 ||
+      (!iconUrl.startsWith("/") && !/^https?:\/\//i.test(iconUrl)))
+  ) {
+    errors.icon_url =
+      "Icon URL must be a valid Media Library URL or local asset path.";
+  }
+
   if (!SERVICE_STATUSES.includes(status)) {
     errors.status = "Select a valid lifecycle status.";
   }
@@ -100,6 +110,7 @@ export function validateServiceInput(input = {}) {
       price_inr: Number.isNaN(priceInr) ? 0 : priceInr,
       price_label: priceLabel,
       icon_name: iconName,
+      ...(iconUrl ? { icon_url: iconUrl } : {}),
       display_order: Number.isNaN(displayOrder) ? 0 : displayOrder,
       status,
     },

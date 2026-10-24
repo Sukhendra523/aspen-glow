@@ -24,6 +24,7 @@ export const EMPTY_PACKAGE_FORM = {
   description: "",
   price_inr: "",
   icon_name: "AutoAwesome",
+  icon_url: "",
   display_order: 1,
   status: "draft",
   package_group: "Multi-Service Packages",
@@ -109,6 +110,16 @@ export function validatePackageInput(input = {}) {
     errors.icon_name = "Select an approved package icon.";
   }
 
+  const iconUrl = (input.icon_url || "").trim();
+  if (
+    iconUrl &&
+    (iconUrl.length > 500 ||
+      (!iconUrl.startsWith("/") && !/^https?:\/\//i.test(iconUrl)))
+  ) {
+    errors.icon_url =
+      "Icon URL must be a valid Media Library URL or local asset path.";
+  }
+
   if (!SERVICE_STATUSES.includes(status)) {
     errors.status = "Select a valid lifecycle status.";
   }
@@ -156,6 +167,7 @@ export function validatePackageInput(input = {}) {
         description,
         price_inr: Number.isNaN(priceInr) ? 0 : priceInr,
         icon_name: iconName,
+        ...(iconUrl ? { icon_url: iconUrl } : {}),
         display_order: Number.isNaN(displayOrder) ? 0 : displayOrder,
         status,
         ...(input.package_group !== undefined

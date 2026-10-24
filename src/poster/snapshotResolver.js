@@ -189,6 +189,7 @@ function buildCatalogueSectionsFromServices(services = []) {
             price_inr: priceInr,
             price_formatted: formatInrPrice(priceInr),
             icon_type: iconTypes[idx % iconTypes.length],
+            icon_url: String(svc.icon_url || "").trim(),
             items: items.map((line) => String(line)),
           };
         })
@@ -200,6 +201,7 @@ function buildCatalogueSectionsFromServices(services = []) {
         price_inr: Number(haldiSvc.price_inr) || 2499,
         price_formatted: formatInrPrice(Number(haldiSvc.price_inr) || 2499),
         icon_type: "mehndi_hand",
+        icon_url: String(haldiSvc.icon_url || "").trim(),
         items:
           Array.isArray(haldiSvc.inclusions) && haldiSvc.inclusions.length > 0
             ? haldiSvc.inclusions.map(String)
@@ -255,6 +257,7 @@ export function buildPosterSnapshot({
   validityNote = "",
   portraitUrl = "",
   showQrCode = false,
+  textStyles = {},
   festival = DEFAULT_FESTIVALS[0],
   template = DEFAULT_POSTER_TEMPLATES[0],
   formatKey = "square_1080",
@@ -330,6 +333,7 @@ export function buildPosterSnapshot({
           defaultColumnColors[idx % defaultColumnColors.length] ||
           "#4e1014"
       ).trim(),
+      icon_url: String(pkg.icon_url || "").trim(),
       items: rawItems.map((line) => String(line)),
     };
   });
@@ -365,6 +369,7 @@ export function buildPosterSnapshot({
           defaultColumnColors[idx % defaultColumnColors.length] ||
           "#4f3811"
       ).trim(),
+      icon_url: String(bundle.icon_url || "").trim(),
       items: rawItems.map((line) => String(line)),
     };
   });
@@ -419,6 +424,8 @@ export function buildPosterSnapshot({
         validity_note: String(validityNote || "").trim(),
         portrait_url: String(portraitUrl || "").trim(),
         show_qr_code: Boolean(showQrCode),
+        qr_code_url: "/aspen-glow-QR-code.png",
+        text_styles: textStyles && typeof textStyles === "object" ? textStyles : {},
       },
       festival: {
         id: safeFestival.id || null,

@@ -10,7 +10,7 @@ export const ALLOWED_MEDIA_MIME_TYPES = [
   "image/webp",
 ];
 export const ALLOWED_MEDIA_EXTENSIONS = ["png", "jpg", "jpeg", "webp"];
-export const MEDIA_CATEGORIES = ["logo", "poster_motif", "general"];
+export const MEDIA_CATEGORIES = ["logo", "poster_motif", "icon", "general"];
 
 const SAFE_CONFIG_ERROR =
   "Backend configuration is missing. Set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY.";

@@ -36,7 +36,17 @@ const ICON_MAP = {
   ContentCut,
 };
 
-function renderServiceIcon(iconName) {
+function renderServiceIcon(iconName, iconUrl = "") {
+  if (iconUrl && typeof iconUrl === "string" && iconUrl.trim()) {
+    return (
+      <Box
+        component="img"
+        src={iconUrl.trim()}
+        alt=""
+        sx={{ width: 28, height: 28, objectFit: "contain" }}
+      />
+    );
+  }
   const IconComponent = ICON_MAP[iconName] || AutoAwesome;
   return <IconComponent sx={{ color: "primary.main" }} />;
 }
@@ -52,7 +62,7 @@ function mapDbServiceToCard(service) {
       ? [service.description]
       : [];
   return {
-    icon: renderServiceIcon(service.icon_name),
+    icon: renderServiceIcon(service.icon_name, service.icon_url),
     title: service.name,
     price: formatInrPrice(service.price_inr, service.price_label),
     items,
@@ -66,7 +76,7 @@ function mapDbPackageToCard(pkg) {
     ? [pkg.description]
     : [];
   return {
-    icon: renderServiceIcon(pkg.icon_name),
+    icon: renderServiceIcon(pkg.icon_name, pkg.icon_url),
     title: pkg.name,
     price: formatInrPrice(pkg.price_inr),
     items,
@@ -80,7 +90,7 @@ function mapDbBundleToCard(bundle) {
     ...packageItems.map((pkgName) => `Includes Package: ${pkgName}`),
   ];
   return {
-    icon: renderServiceIcon(bundle.icon_name),
+    icon: renderServiceIcon(bundle.icon_name, bundle.icon_url),
     title: bundle.name,
     price: formatInrPrice(bundle.price_inr),
     items,

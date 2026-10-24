@@ -37,6 +37,7 @@ import {
   formatBundlePackageLine,
   updateBundleRecord,
 } from "../../services/bundleService";
+import MediaLibraryIconPicker from "../../components/admin/MediaLibraryIconPicker";
 import { useAuth } from "../../context/AuthContext";
 
 function mapBundleToForm(bundle) {
@@ -58,6 +59,7 @@ function mapBundleToForm(bundle) {
         ? String(bundle.price_inr)
         : "",
     icon_name: bundle.icon_name || "Star",
+    icon_url: bundle.icon_url || "",
     display_order:
       bundle.display_order !== undefined && bundle.display_order !== null
         ? String(bundle.display_order)
@@ -73,6 +75,7 @@ function serializeBundleForm(form) {
     description: form.description || "",
     price_inr: String(form.price_inr ?? ""),
     icon_name: form.icon_name || "Star",
+    icon_url: form.icon_url || "",
     display_order: String(form.display_order ?? "1"),
     status: form.status || "draft",
     package_items: (form.package_items || []).map((item) => ({
@@ -543,6 +546,20 @@ export default function AdminBundlesPage() {
                       </TextField>
                     </Grid>
                   </Grid>
+
+                  <MediaLibraryIconPicker
+                    id="bundle-icon-url"
+                    label="Bundle Custom Icon from Media Library (optional)"
+                    value={form.icon_url || ""}
+                    onChange={(nextUrl) => {
+                      setForm((prev) => ({ ...prev, icon_url: nextUrl }));
+                      setSuccessMessage("");
+                    }}
+                    error={Boolean(fieldErrors.icon_url)}
+                    helperText={fieldErrors.icon_url}
+                    disabled={saving}
+                    client={client}
+                  />
 
                   <TextField
                     id="bundle-description"

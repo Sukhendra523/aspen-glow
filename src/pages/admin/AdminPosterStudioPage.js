@@ -40,6 +40,7 @@ import {
 } from "../../poster/posterTemplates";
 import {
   exportPosterToPng,
+  exportSnapshotPreviewCardToPng,
   renderPosterToCanvas,
 } from "../../poster/posterRenderer";
 import {
@@ -61,6 +62,9 @@ import {
   recordPosterExportMetadata,
   savePosterDraft,
 } from "../../services/posterService";
+import RichTextCampaignField, {
+  DEFAULT_CAMPAIGN_TEXT_STYLES,
+} from "../../components/admin/RichTextCampaignField";
 import { useAuth } from "../../context/AuthContext";
 
 export default function AdminPosterStudioPage() {
@@ -117,6 +121,7 @@ export default function AdminPosterStudioPage() {
   const [portraitUrl, setPortraitUrl] = useState("");
   const [showQrCode, setShowQrCode] = useState(false);
   const [validityNote, setValidityNote] = useState("");
+  const [textStyles, setTextStyles] = useState(DEFAULT_CAMPAIGN_TEXT_STYLES);
 
   const [selectedPackageIds, setSelectedPackageIds] = useState([]);
   const [selectedBundleIds, setSelectedBundleIds] = useState([]);
@@ -281,6 +286,7 @@ export default function AdminPosterStudioPage() {
         validityNote,
         portraitUrl,
         showQrCode,
+        textStyles,
         festival: activeFestival,
         template: activeTemplate,
         formatKey,
@@ -304,6 +310,7 @@ export default function AdminPosterStudioPage() {
       validityNote,
       portraitUrl,
       showQrCode,
+      textStyles,
       activeFestival,
       activeTemplate,
       formatKey,
@@ -315,6 +322,17 @@ export default function AdminPosterStudioPage() {
       services,
     ]
   );
+
+  const handleTextStyleChange = (fieldKey, nextStyle) => {
+    setLockedSnapshot(null);
+    setTextStyles((prev) => ({
+      ...prev,
+      [fieldKey]: {
+        ...(prev[fieldKey] || {}),
+        ...(nextStyle || {}),
+      },
+    }));
+  };
 
   const displayedSnapshot = lockedSnapshot || liveSnapshot;
 
@@ -488,6 +506,7 @@ export default function AdminPosterStudioPage() {
           selectedBundleIds,
           showQrCode,
           portraitUrl,
+          textStyles,
         },
         snapshot: snapshotToSave,
       },
@@ -541,6 +560,22 @@ export default function AdminPosterStudioPage() {
     setStatusMessage(`Exported PNG "${result.filename}".`);
   };
 
+  const handleExportPreviewCardPng = () => {
+    setExportError("");
+    setDraftError("");
+    setStatusMessage("");
+
+    const result = exportSnapshotPreviewCardToPng(displayedSnapshot);
+    if (!result.ok) {
+      setExportError(result.error);
+      return;
+    }
+
+    setStatusMessage(
+      `Exported Snapshot Preview Card PNG "${result.filename}".`
+    );
+  };
+
   const handleOpenSavedPoster = (poster) => {
     setDraftError("");
     setExportError("");
@@ -555,11 +590,29 @@ export default function AdminPosterStudioPage() {
     setHeadline(snap?.campaign?.headline || "");
     setSubheadline(snap?.campaign?.subheadline || "");
     setValidityNote(snap?.campaign?.validity_note || "");
+    if (snap?.campaign?.secondary_subheadline !== undefined) {
+      setSecondarySubheadline(snap.campaign.secondary_subheadline);
+    }
     if (snap?.campaign?.section_title) {
       setSectionTitle(snap.campaign.section_title);
     }
+    if (snap?.campaign?.section_subtitle !== undefined) {
+      setSectionSubtitle(snap.campaign.section_subtitle);
+    }
+    if (snap?.campaign?.badge_text !== undefined) {
+      setBadgeText(snap.campaign.badge_text);
+    }
+    if (snap?.campaign?.cta_text) {
+      setCtaText(snap.campaign.cta_text);
+    }
     if (snap?.campaign?.footer_tagline) {
       setFooterTagline(snap.campaign.footer_tagline);
+    }
+    if (snap?.campaign?.text_styles) {
+      setTextStyles({
+        ...DEFAULT_CAMPAIGN_TEXT_STYLES,
+        ...snap.campaign.text_styles,
+      });
     }
     if (snap?.template?.template_key) {
       setSelectedTemplateKey(snap.template.template_key);
@@ -584,6 +637,63 @@ export default function AdminPosterStudioPage() {
     setDraftError("");
     setExportError("");
     setStatusMessage("");
+  };
+
+  const handleResetForm = () => {
+    const defaultFest = festivals[0] || DEFAULT_FESTIVALS[0];
+    const defaultTpl = templates[0] || DEFAULT_POSTER_TEMPLATES[0];
+    setEditingPosterId(null);
+    setLockedSnapshot(null);
+    setSelectedPresetKey("");
+    setSelectedFestivalId(defaultFest.id);
+    setSelectedTemplateKey(defaultTpl.template_key);
+    setFormatKey("square_1080");
+    setThemeKey("royal_dark_gold");
+    setCampaignName(`${defaultFest.name} Festive Campaign`);
+    setHeadline(defaultFest.default_headline || "");
+    setSubheadline(defaultFest.default_subheadline || "");
+    setSecondarySubheadline(
+      "Celebrate the bond of love with Self-Care & Confidence"
+    );
+    setSectionTitle("MULTI SERVICE PACKAGES");
+    setSectionSubtitle(`Pamper Yourself This ${defaultFest.name}`);
+    setBadgeText("GLOW\nINSIDE & OUT\nBECAUSE\nYOU DESERVE IT!");
+    setCtaText("BOOK YOUR APPOINTMENT NOW!");
+    setFooterTagline(
+      `THIS ${defaultFest.name.toUpperCase()}, GIFT YOUR SISTER THE GLOW SHE DESERVES.`
+    );
+    setPortraitUrl("");
+    setShowQrCode(false);
+    setValidityNote("");
+    setTextStyles(DEFAULT_CAMPAIGN_TEXT_STYLES);
+    setSelectedPackageIds(packages.slice(0, 4).map((p) => p.id));
+    setSelectedBundleIds([]);
+    setDraftError("");
+    setExportError("");
+    setStatusMessage("Reset Poster Configuration form to default values.");
+  };
+
+  const handleClearForm = () => {
+    setLockedSnapshot(null);
+    setSelectedPresetKey("");
+    setCampaignName("");
+    setHeadline("");
+    setSubheadline("");
+    setSecondarySubheadline("");
+    setSectionTitle("");
+    setSectionSubtitle("");
+    setBadgeText("");
+    setCtaText("");
+    setFooterTagline("");
+    setPortraitUrl("");
+    setShowQrCode(false);
+    setValidityNote("");
+    setTextStyles(DEFAULT_CAMPAIGN_TEXT_STYLES);
+    setSelectedPackageIds([]);
+    setSelectedBundleIds([]);
+    setDraftError("");
+    setExportError("");
+    setStatusMessage("Cleared all Poster Configuration form inputs.");
   };
 
   const handleConfirmArchivePoster = async () => {
@@ -809,7 +919,7 @@ export default function AdminPosterStudioPage() {
                   <Typography variant="h5" component="h1" fontWeight="bold">
                     Poster Configuration
                   </Typography>
-                  <Box display="flex" gap={1}>
+                  <Box display="flex" gap={1} flexWrap="wrap">
                     {editingPosterId && (
                       <Button
                         type="button"
@@ -824,9 +934,35 @@ export default function AdminPosterStudioPage() {
                       type="button"
                       size="small"
                       variant="outlined"
+                      color="secondary"
+                      onClick={handleResetForm}
+                    >
+                      Reset Form
+                    </Button>
+                    <Button
+                      type="button"
+                      size="small"
+                      variant="outlined"
+                      color="warning"
+                      onClick={handleClearForm}
+                    >
+                      Clear Form
+                    </Button>
+                    <Button
+                      type="button"
+                      size="small"
+                      variant="outlined"
                       onClick={() => setFestivalDialogOpen(true)}
                     >
                       + Add Festival
+                    </Button>
+                    <Button
+                      component={RouterLink}
+                      to="/admin/festivals"
+                      size="small"
+                      variant="text"
+                    >
+                      Manage Festivals
                     </Button>
                   </Box>
                 </Box>
@@ -928,7 +1064,7 @@ export default function AdminPosterStudioPage() {
                 <Divider sx={{ my: 2.5 }} />
 
                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  Campaign Copy &amp; Layout Labels
+                  Campaign Copy &amp; Typography Styling (Tiptap Rich Editor)
                 </Typography>
 
                 <TextField
@@ -946,75 +1082,131 @@ export default function AdminPosterStudioPage() {
                   helperText={validation.errors.campaignName}
                 />
 
-                <TextField
+                <RichTextCampaignField
                   id="poster-headline"
+                  fieldKey="headline"
                   label="Poster Headline"
-                  fullWidth
                   required
-                  margin="dense"
                   value={headline}
-                  onChange={(e) => {
+                  onChange={(nextVal) => {
                     setLockedSnapshot(null);
-                    setHeadline(e.target.value);
+                    setHeadline(nextVal);
                   }}
+                  styleValue={textStyles.headline}
+                  onStyleChange={(nextStyle) =>
+                    handleTextStyleChange("headline", nextStyle)
+                  }
                   error={Boolean(validation.errors.headline)}
                   helperText={validation.errors.headline}
                 />
 
-                <TextField
+                <RichTextCampaignField
                   id="poster-subheadline"
+                  fieldKey="subheadline"
                   label="Poster Subheadline (Ribbon Banner)"
-                  fullWidth
-                  margin="dense"
                   value={subheadline}
-                  onChange={(e) => {
+                  onChange={(nextVal) => {
                     setLockedSnapshot(null);
-                    setSubheadline(e.target.value);
+                    setSubheadline(nextVal);
                   }}
+                  styleValue={textStyles.subheadline}
+                  onStyleChange={(nextStyle) =>
+                    handleTextStyleChange("subheadline", nextStyle)
+                  }
                   error={Boolean(validation.errors.subheadline)}
                   helperText={validation.errors.subheadline}
                 />
 
-                <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <TextField
-                      id="poster-section-title"
-                      label="Section Banner Title"
-                      fullWidth
-                      size="small"
-                      value={sectionTitle}
-                      onChange={(e) => {
-                        setLockedSnapshot(null);
-                        setSectionTitle(e.target.value);
-                      }}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <TextField
-                      id="poster-cta-text"
-                      label="CTA Ribbon Text"
-                      fullWidth
-                      size="small"
-                      value={ctaText}
-                      onChange={(e) => {
-                        setLockedSnapshot(null);
-                        setCtaText(e.target.value);
-                      }}
-                    />
-                  </Grid>
-                </Grid>
-
-                <TextField
-                  id="poster-footer-tagline"
-                  label="Footer Closing Tagline"
-                  fullWidth
-                  size="small"
-                  margin="dense"
-                  value={footerTagline}
-                  onChange={(e) => {
+                <RichTextCampaignField
+                  id="poster-secondary-subheadline"
+                  fieldKey="secondarySubheadline"
+                  label="Secondary Subheadline (Optional Accent Copy)"
+                  value={secondarySubheadline}
+                  onChange={(nextVal) => {
                     setLockedSnapshot(null);
-                    setFooterTagline(e.target.value);
+                    setSecondarySubheadline(nextVal);
                   }}
+                  styleValue={textStyles.secondarySubheadline}
+                  onStyleChange={(nextStyle) =>
+                    handleTextStyleChange("secondarySubheadline", nextStyle)
+                  }
+                />
+
+                <RichTextCampaignField
+                  id="poster-section-title"
+                  fieldKey="sectionTitle"
+                  label="Section Banner Title"
+                  value={sectionTitle}
+                  onChange={(nextVal) => {
+                    setLockedSnapshot(null);
+                    setSectionTitle(nextVal);
+                  }}
+                  styleValue={textStyles.sectionTitle}
+                  onStyleChange={(nextStyle) =>
+                    handleTextStyleChange("sectionTitle", nextStyle)
+                  }
+                />
+
+                <RichTextCampaignField
+                  id="poster-section-subtitle"
+                  fieldKey="sectionSubtitle"
+                  label="Section Banner Subtitle"
+                  value={sectionSubtitle}
+                  onChange={(nextVal) => {
+                    setLockedSnapshot(null);
+                    setSectionSubtitle(nextVal);
+                  }}
+                  styleValue={textStyles.sectionSubtitle}
+                  onStyleChange={(nextStyle) =>
+                    handleTextStyleChange("sectionSubtitle", nextStyle)
+                  }
+                />
+
+                <RichTextCampaignField
+                  id="poster-badge-text"
+                  fieldKey="badgeText"
+                  label="Circular Emblem Badge Copy"
+                  multiline
+                  minRows={2}
+                  value={badgeText}
+                  onChange={(nextVal) => {
+                    setLockedSnapshot(null);
+                    setBadgeText(nextVal);
+                  }}
+                  styleValue={textStyles.badgeText}
+                  onStyleChange={(nextStyle) =>
+                    handleTextStyleChange("badgeText", nextStyle)
+                  }
+                />
+
+                <RichTextCampaignField
+                  id="poster-cta-text"
+                  fieldKey="ctaText"
+                  label="CTA Ribbon Text"
+                  value={ctaText}
+                  onChange={(nextVal) => {
+                    setLockedSnapshot(null);
+                    setCtaText(nextVal);
+                  }}
+                  styleValue={textStyles.ctaText}
+                  onStyleChange={(nextStyle) =>
+                    handleTextStyleChange("ctaText", nextStyle)
+                  }
+                />
+
+                <RichTextCampaignField
+                  id="poster-footer-tagline"
+                  fieldKey="footerTagline"
+                  label="Footer Closing Tagline"
+                  value={footerTagline}
+                  onChange={(nextVal) => {
+                    setLockedSnapshot(null);
+                    setFooterTagline(nextVal);
+                  }}
+                  styleValue={textStyles.footerTagline}
+                  onStyleChange={(nextStyle) =>
+                    handleTextStyleChange("footerTagline", nextStyle)
+                  }
                 />
 
                 <TextField
@@ -1031,17 +1223,20 @@ export default function AdminPosterStudioPage() {
                   }}
                 />
 
-                <TextField
+                <RichTextCampaignField
                   id="poster-validity-note"
+                  fieldKey="validityNote"
                   label="Optional Validity / Offer Note"
-                  fullWidth
-                  margin="dense"
                   placeholder="Valid until Diwali Eve • Prior appointment required"
                   value={validityNote}
-                  onChange={(e) => {
+                  onChange={(nextVal) => {
                     setLockedSnapshot(null);
-                    setValidityNote(e.target.value);
+                    setValidityNote(nextVal);
                   }}
+                  styleValue={textStyles.validityNote}
+                  onStyleChange={(nextStyle) =>
+                    handleTextStyleChange("validityNote", nextStyle)
+                  }
                   error={Boolean(validation.errors.validityNote)}
                   helperText={
                     validation.errors.validityNote ||
@@ -1217,8 +1412,55 @@ export default function AdminPosterStudioPage() {
                     />
                   )}
                 </Box>
-
+{/* Canvas Renderer Surface */}
+                <Box sx={{ textAlign: "center" }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                    mb={1}
+                  >
+                    High-Resolution Fabric.js Canvas Surface (
+                    {displayedSnapshot.template.width} ×{" "}
+                    {displayedSnapshot.template.height})
+                  </Typography>
+                  <canvas
+                    ref={canvasRef}
+                    aria-label="Poster artwork canvas"
+                    style={{
+                      maxWidth: "100%",
+                      height: "auto",
+                      border: "2px solid #d4af63",
+                      borderRadius: "6px",
+                      backgroundColor: "#0f0506",
+                    }}
+                  />
+                </Box>
+                
                 {/* Accessible Luxury Snapshot Preview Card */}
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  flexWrap="wrap"
+                  gap={1}
+                  mt={3}
+                  mb={1.5}
+                >
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    Accessible Luxury Snapshot Preview Card
+                  </Typography>
+                  <Button
+                    type="button"
+                    size="small"
+                    variant="contained"
+                    color="secondary"
+                    onClick={handleExportPreviewCardPng}
+                  >
+                    Export Preview Card PNG
+                  </Button>
+                </Box>
+
                 <Box
                   data-testid="poster-snapshot-preview"
                   sx={{
@@ -1263,11 +1505,37 @@ export default function AdminPosterStudioPage() {
                     variant="h4"
                     component="h3"
                     sx={{
-                      fontFamily: `'${displayedSnapshot.brand.heading_font}', serif`,
+                      fontFamily: `'${
+                        displayedSnapshot.campaign.text_styles?.headline
+                          ?.fontFamily || displayedSnapshot.brand.heading_font
+                      }', serif`,
                       color:
-                        displayedSnapshot.template.theme?.primary || "#e05368",
-                      fontWeight: 700,
-                      fontStyle: "italic",
+                        displayedSnapshot.campaign.text_styles?.headline
+                          ?.color ||
+                        displayedSnapshot.template.theme?.primary ||
+                        "#e05368",
+                      fontWeight:
+                        displayedSnapshot.campaign.text_styles?.headline
+                          ?.fontWeight || 700,
+                      fontStyle:
+                        displayedSnapshot.campaign.text_styles?.headline
+                          ?.fontStyle || "italic",
+                      textTransform:
+                        displayedSnapshot.campaign.text_styles?.headline
+                          ?.textTransform || "none",
+                      ...(Number(
+                        displayedSnapshot.campaign.text_styles?.headline
+                          ?.fontSize
+                      ) > 0
+                        ? {
+                            fontSize: `${Math.round(
+                              Number(
+                                displayedSnapshot.campaign.text_styles.headline
+                                  .fontSize
+                              ) * 0.65
+                            )}px`,
+                          }
+                        : {}),
                       mt: 0.5,
                     }}
                   >
@@ -1284,13 +1552,210 @@ export default function AdminPosterStudioPage() {
                         bgcolor:
                           displayedSnapshot.template.theme?.secondary ||
                           "#d4af63",
-                        color: "#1b080a",
-                        fontWeight: 700,
-                        fontStyle: "italic",
+                        color:
+                          displayedSnapshot.campaign.text_styles?.subheadline
+                            ?.color || "#1b080a",
+                        fontFamily: `'${
+                          displayedSnapshot.campaign.text_styles?.subheadline
+                            ?.fontFamily || displayedSnapshot.brand.heading_font
+                        }', serif`,
+                        fontWeight:
+                          displayedSnapshot.campaign.text_styles?.subheadline
+                            ?.fontWeight || 700,
+                        fontStyle:
+                          displayedSnapshot.campaign.text_styles?.subheadline
+                            ?.fontStyle || "italic",
+                        textTransform:
+                          displayedSnapshot.campaign.text_styles?.subheadline
+                            ?.textTransform || "none",
+                        ...(Number(
+                          displayedSnapshot.campaign.text_styles?.subheadline
+                            ?.fontSize
+                        ) > 0
+                          ? {
+                              fontSize: `${Math.round(
+                                Number(
+                                  displayedSnapshot.campaign.text_styles
+                                    .subheadline.fontSize
+                                ) * 0.65
+                              )}px`,
+                            }
+                          : {}),
                       }}
                     >
                       ❈ {displayedSnapshot.campaign.subheadline} ❈
                     </Box>
+                  )}
+
+                  {displayedSnapshot.campaign.secondary_subheadline && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontFamily: `'${
+                          displayedSnapshot.campaign.text_styles
+                            ?.secondarySubheadline?.fontFamily ||
+                          displayedSnapshot.brand.heading_font
+                        }', serif`,
+                        color:
+                          displayedSnapshot.campaign.text_styles
+                            ?.secondarySubheadline?.color || "#f5ebe6",
+                        fontWeight:
+                          displayedSnapshot.campaign.text_styles
+                            ?.secondarySubheadline?.fontWeight || "normal",
+                        fontStyle:
+                          displayedSnapshot.campaign.text_styles
+                            ?.secondarySubheadline?.fontStyle || "normal",
+                        textTransform:
+                          displayedSnapshot.campaign.text_styles
+                            ?.secondarySubheadline?.textTransform || "none",
+                        ...(Number(
+                          displayedSnapshot.campaign.text_styles
+                            ?.secondarySubheadline?.fontSize
+                        ) > 0
+                          ? {
+                              fontSize: `${Math.round(
+                                Number(
+                                  displayedSnapshot.campaign.text_styles
+                                    .secondarySubheadline.fontSize
+                                ) * 0.65
+                              )}px`,
+                            }
+                          : {}),
+                        mt: 0.5,
+                      }}
+                    >
+                      {displayedSnapshot.campaign.secondary_subheadline}
+                    </Typography>
+                  )}
+
+                  {displayedSnapshot.campaign.badge_text && (
+                    <Box
+                      sx={{
+                        display: "inline-block",
+                        px: 2,
+                        py: 0.5,
+                        mt: 1,
+                        borderRadius: 4,
+                        border: "1px solid #d4af63",
+                        bgcolor: "rgba(18, 7, 9, 0.9)",
+                        fontFamily: `'${
+                          displayedSnapshot.campaign.text_styles?.badgeText
+                            ?.fontFamily || displayedSnapshot.brand.heading_font
+                        }', serif`,
+                        color:
+                          displayedSnapshot.campaign.text_styles?.badgeText
+                            ?.color || "#f8efe6",
+                        fontWeight:
+                          displayedSnapshot.campaign.text_styles?.badgeText
+                            ?.fontWeight || "bold",
+                        fontStyle:
+                          displayedSnapshot.campaign.text_styles?.badgeText
+                            ?.fontStyle || "normal",
+                        textTransform:
+                          displayedSnapshot.campaign.text_styles?.badgeText
+                            ?.textTransform || "none",
+                        fontSize:
+                          Number(
+                            displayedSnapshot.campaign.text_styles?.badgeText
+                              ?.fontSize
+                          ) > 0
+                            ? `${Math.round(
+                                Number(
+                                  displayedSnapshot.campaign.text_styles
+                                    .badgeText.fontSize
+                                ) * 0.6
+                              )}px`
+                            : "0.75rem",
+                      }}
+                    >
+                      {String(displayedSnapshot.campaign.badge_text)
+                        .split(/\r?\n/)
+                        .filter(Boolean)
+                        .join(" • ")}{" "}
+                      ♥
+                    </Box>
+                  )}
+
+                  {displayedSnapshot.campaign.section_title && (
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        mt: 1.5,
+                        fontFamily: `'${
+                          displayedSnapshot.campaign.text_styles?.sectionTitle
+                            ?.fontFamily || displayedSnapshot.brand.heading_font
+                        }', serif`,
+                        color:
+                          displayedSnapshot.campaign.text_styles?.sectionTitle
+                            ?.color || "#f1cf85",
+                        fontWeight:
+                          displayedSnapshot.campaign.text_styles?.sectionTitle
+                            ?.fontWeight || "bold",
+                        fontStyle:
+                          displayedSnapshot.campaign.text_styles?.sectionTitle
+                            ?.fontStyle || "normal",
+                        textTransform:
+                          displayedSnapshot.campaign.text_styles?.sectionTitle
+                            ?.textTransform || "none",
+                        ...(Number(
+                          displayedSnapshot.campaign.text_styles?.sectionTitle
+                            ?.fontSize
+                        ) > 0
+                          ? {
+                              fontSize: `${Math.round(
+                                Number(
+                                  displayedSnapshot.campaign.text_styles
+                                    .sectionTitle.fontSize
+                                ) * 0.65
+                              )}px`,
+                            }
+                          : {}),
+                      }}
+                    >
+                      ❈ {displayedSnapshot.campaign.section_title} ❈
+                    </Typography>
+                  )}
+
+                  {displayedSnapshot.campaign.section_subtitle && (
+                    <Typography
+                      variant="caption"
+                      display="block"
+                      sx={{
+                        mb: 1,
+                        fontFamily: `'${
+                          displayedSnapshot.campaign.text_styles
+                            ?.sectionSubtitle?.fontFamily ||
+                          displayedSnapshot.brand.heading_font
+                        }', serif`,
+                        color:
+                          displayedSnapshot.campaign.text_styles
+                            ?.sectionSubtitle?.color || "#ebd5c8",
+                        fontWeight:
+                          displayedSnapshot.campaign.text_styles
+                            ?.sectionSubtitle?.fontWeight || "normal",
+                        fontStyle:
+                          displayedSnapshot.campaign.text_styles
+                            ?.sectionSubtitle?.fontStyle || "italic",
+                        textTransform:
+                          displayedSnapshot.campaign.text_styles
+                            ?.sectionSubtitle?.textTransform || "none",
+                        ...(Number(
+                          displayedSnapshot.campaign.text_styles
+                            ?.sectionSubtitle?.fontSize
+                        ) > 0
+                          ? {
+                              fontSize: `${Math.round(
+                                Number(
+                                  displayedSnapshot.campaign.text_styles
+                                    .sectionSubtitle.fontSize
+                                ) * 0.65
+                              )}px`,
+                            }
+                          : {}),
+                      }}
+                    >
+                      — {displayedSnapshot.campaign.section_subtitle} —
+                    </Typography>
                   )}
 
                   <Grid container spacing={2} sx={{ mt: 1, mb: 2 }}>
@@ -1397,10 +1862,37 @@ export default function AdminPosterStudioPage() {
                   {displayedSnapshot.campaign.validity_note && (
                     <Typography
                       variant="caption"
-                      fontWeight="bold"
                       display="block"
                       sx={{
-                        color: "#f1cf85",
+                        fontFamily: `'${
+                          displayedSnapshot.campaign.text_styles?.validityNote
+                            ?.fontFamily || "Lato"
+                        }', sans-serif`,
+                        color:
+                          displayedSnapshot.campaign.text_styles?.validityNote
+                            ?.color || "#f1cf85",
+                        fontWeight:
+                          displayedSnapshot.campaign.text_styles?.validityNote
+                            ?.fontWeight || "bold",
+                        fontStyle:
+                          displayedSnapshot.campaign.text_styles?.validityNote
+                            ?.fontStyle || "normal",
+                        textTransform:
+                          displayedSnapshot.campaign.text_styles?.validityNote
+                            ?.textTransform || "none",
+                        ...(Number(
+                          displayedSnapshot.campaign.text_styles?.validityNote
+                            ?.fontSize
+                        ) > 0
+                          ? {
+                              fontSize: `${Math.round(
+                                Number(
+                                  displayedSnapshot.campaign.text_styles
+                                    .validityNote.fontSize
+                                ) * 0.65
+                              )}px`,
+                            }
+                          : {}),
                         mb: 1,
                       }}
                     >
@@ -1419,8 +1911,37 @@ export default function AdminPosterStudioPage() {
                   >
                     <Typography
                       variant="body2"
-                      fontWeight="bold"
-                      sx={{ color: "#f1cf85" }}
+                      sx={{
+                        fontFamily: `'${
+                          displayedSnapshot.campaign.text_styles?.ctaText
+                            ?.fontFamily || displayedSnapshot.brand.heading_font
+                        }', serif`,
+                        color:
+                          displayedSnapshot.campaign.text_styles?.ctaText
+                            ?.color || "#f1cf85",
+                        fontWeight:
+                          displayedSnapshot.campaign.text_styles?.ctaText
+                            ?.fontWeight || "bold",
+                        fontStyle:
+                          displayedSnapshot.campaign.text_styles?.ctaText
+                            ?.fontStyle || "normal",
+                        textTransform:
+                          displayedSnapshot.campaign.text_styles?.ctaText
+                            ?.textTransform || "none",
+                        ...(Number(
+                          displayedSnapshot.campaign.text_styles?.ctaText
+                            ?.fontSize
+                        ) > 0
+                          ? {
+                              fontSize: `${Math.round(
+                                Number(
+                                  displayedSnapshot.campaign.text_styles.ctaText
+                                    .fontSize
+                                ) * 0.65
+                              )}px`,
+                            }
+                          : {}),
+                      }}
                     >
                       {displayedSnapshot.campaign.cta_text ||
                         "BOOK YOUR APPOINTMENT NOW!"}
@@ -1432,11 +1953,70 @@ export default function AdminPosterStudioPage() {
                     <Typography variant="caption" display="block">
                       📍 {displayedSnapshot.contact.address}
                     </Typography>
+                    {displayedSnapshot.campaign.show_qr_code && (
+                      <Box
+                        sx={{
+                          mt: 1,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 1.5,
+                          p: 0.75,
+                          borderRadius: 1,
+                          bgcolor: "#fff",
+                          color: "#1b080a",
+                        }}
+                      >
+                        <Box
+                          component="img"
+                          src={
+                            displayedSnapshot.campaign.qr_code_url ||
+                            "/aspen-glow-QR-code.png"
+                          }
+                          alt="Scannable Booking QR Code"
+                          sx={{ width: 52, height: 52, objectFit: "contain" }}
+                        />
+                        <Typography variant="caption" fontWeight="bold">
+                          SCAN TO BOOK NOW!
+                        </Typography>
+                      </Box>
+                    )}
                     {displayedSnapshot.campaign.footer_tagline && (
                       <Typography
                         variant="caption"
                         display="block"
-                        sx={{ color: "#e05368", fontWeight: "bold", mt: 0.5 }}
+                        sx={{
+                          fontFamily: `'${
+                            displayedSnapshot.campaign.text_styles
+                              ?.footerTagline?.fontFamily ||
+                            displayedSnapshot.brand.heading_font
+                          }', serif`,
+                          color:
+                            displayedSnapshot.campaign.text_styles
+                              ?.footerTagline?.color || "#e05368",
+                          fontWeight:
+                            displayedSnapshot.campaign.text_styles
+                              ?.footerTagline?.fontWeight || "bold",
+                          fontStyle:
+                            displayedSnapshot.campaign.text_styles
+                              ?.footerTagline?.fontStyle || "normal",
+                          textTransform:
+                            displayedSnapshot.campaign.text_styles
+                              ?.footerTagline?.textTransform || "none",
+                          ...(Number(
+                            displayedSnapshot.campaign.text_styles
+                              ?.footerTagline?.fontSize
+                          ) > 0
+                            ? {
+                                fontSize: `${Math.round(
+                                  Number(
+                                    displayedSnapshot.campaign.text_styles
+                                      .footerTagline.fontSize
+                                  ) * 0.65
+                                )}px`,
+                              }
+                            : {}),
+                          mt: 0.5,
+                        }}
                       >
                         {displayedSnapshot.campaign.footer_tagline} ♥
                       </Typography>
@@ -1444,30 +2024,7 @@ export default function AdminPosterStudioPage() {
                   </Box>
                 </Box>
 
-                {/* Canvas Renderer Surface */}
-                <Box sx={{ textAlign: "center" }}>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                    mb={1}
-                  >
-                    High-Resolution Fabric.js Canvas Surface (
-                    {displayedSnapshot.template.width} ×{" "}
-                    {displayedSnapshot.template.height})
-                  </Typography>
-                  <canvas
-                    ref={canvasRef}
-                    aria-label="Poster artwork canvas"
-                    style={{
-                      maxWidth: "100%",
-                      height: "auto",
-                      border: "2px solid #d4af63",
-                      borderRadius: "6px",
-                      backgroundColor: "#0f0506",
-                    }}
-                  />
-                </Box>
+                
               </CardContent>
             </Card>
 
@@ -1643,10 +2200,11 @@ export default function AdminPosterStudioPage() {
             <TextField
               id="new-festival-accent"
               label="Accent Color (Hex)"
+              type="color"
               fullWidth
               required
               margin="dense"
-              value={newFestivalForm.accent_color}
+              value={newFestivalForm.accent_color || "#c2185b"}
               onChange={(e) =>
                 setNewFestivalForm((prev) => ({
                   ...prev,

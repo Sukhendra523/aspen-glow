@@ -62,6 +62,7 @@ export const EMPTY_SERVICE_FORM = {
   price_inr: "",
   price_label: "",
   icon_name: "AutoAwesome",
+  icon_url: "",
   display_order: 1,
   status: "draft",
 };
